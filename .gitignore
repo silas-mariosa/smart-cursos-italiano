@@ -1,0 +1,39 @@
+﻿# Dependencies
+node_modules/
+
+# Environment & secrets (never commit real credentials)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+web-build/
+.expo/
+
+# Logs & debug
+*.log
+npm-debug.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Mobile / Expo
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+
+# Tooling / deploy
+.vercel
+*.tsbuildinfo
+
+# Local workspace (optional personal paths)
+*.code-workspace.user

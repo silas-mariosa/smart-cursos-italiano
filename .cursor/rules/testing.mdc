@@ -1,0 +1,44 @@
+---
+description: Padrões de testes
+globs: **/*.{test,spec}.{ts,tsx}
+alwaysApply: false
+---
+
+# Testes
+
+## Estado nos projetos de referência
+
+- Backends: `bun:test` com cobertura mínima
+- Mobile: jest-expo configurado, poucos testes
+- Web: apenas ESLint
+
+## Backend
+
+- Framework: `bun:test`
+- Testar helpers puros (`result`, validações)
+- Testar handlers com mock de DB quando necessário
+- Script: `bun test`
+
+## Mobile
+
+- Framework: jest-expo
+- Testes em `__tests__/`
+- Script: `bun run test`
+
+## Frontend / CRM
+
+- Priorizar `npm run lint`
+- Adicionar testes quando lógica for extraída para funções puras
+- E2E: Playwright documentado como próximo passo (não implementado nos refs)
+
+## CI (futuro)
+
+- Lint em PR
+- `bun test` no backend
+- `next build` nos clientes web
+
+## O que não testar
+
+- Componentes visuais triviais
+- Configuração de framework
+- Integrações externas sem mock

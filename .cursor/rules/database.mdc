@@ -1,0 +1,42 @@
+---
+description: Padrões de banco de dados Drizzle/PostgreSQL
+globs: **/drizzle/**,**/schema.ts,**/*.sql
+alwaysApply: false
+---
+
+# Database
+
+## Stack
+
+- PostgreSQL + Drizzle ORM + drizzle-kit
+- Conexão via `DB_CONNECTION`
+- Driver `postgres` com `prepare: false`
+
+## Schema
+
+- Arquivo único: `src/drizzle/schema.ts`
+- PK: UUID (`uuid().primaryKey().defaultRandom()`)
+- Timestamps: `created_at`, `updated_at`, `deleted_at` (soft delete)
+- Enums PostgreSQL para status/roles
+- Colunas snake_case
+
+## Migrations
+
+1. Alterar `schema.ts`
+2. `bun run generate`
+3. Revisar SQL em `drizzle/`
+4. `bun run migrate`
+
+- **Não** usar `db:push` em produção
+- **Não** usar integer auto-increment para entidades principais
+
+## Queries
+
+- Drizzle direto nos handlers (`select`, `insert`, `update`)
+- Filtrar `deleted_at IS NULL` em leituras
+- Sem raw SQL exceto migrations
+
+## Seed
+
+- Script em `src/drizzle/seed.ts`
+- Idempotente (verifica dados existentes)

@@ -1,0 +1,44 @@
+---
+description: Padrões de segurança
+globs: **/*
+alwaysApply: true
+---
+
+# Segurança
+
+## Autenticação
+
+- JWT via `@elysiajs/jwt`
+- Secret em `JWT_SECRET` (nunca hardcoded)
+- Hash de senha: `Bun.password.hash` / `verify`
+- Bearer token: `Authorization: Bearer <token>`
+
+## Autorização
+
+- RBAC com roles `user` | `admin`
+- Endpoints `/admin/*` exigem `requireAdmin()`
+- CRM valida admin via `/admin/stats` após login
+
+## Clientes
+
+- Web/CRM: `localStorage.authToken`
+- Mobile: AsyncStorage `"token"`
+- 401 limpa token automaticamente
+
+## Variáveis sensíveis
+
+- Nunca commitar `.env`
+- Usar `.env.example` como referência
+- Credenciais de integrações (S3, SMTP) apenas via env
+
+## CORS
+
+- Configurável via `CORS_ORIGINS`
+- Evitar `origin: "*"` em produção
+
+## Anti-patterns a evitar
+
+- Secrets no código fonte
+- Logs de senha/token
+- `fetch` sem auth em rotas protegidas
+- Confiar apenas em guard client-side para dados sensíveis (documentar limitação)

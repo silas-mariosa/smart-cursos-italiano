@@ -1,0 +1,45 @@
+---
+description: Regras do frontend-template
+globs: frontend-template/**/*
+alwaysApply: false
+---
+
+# Frontend
+
+## API
+
+- Toda comunicação HTTP em `lib/api.ts`
+- Base URL: `NEXT_PUBLIC_API_URL`
+- Token: `localStorage.authToken`
+
+## Rotas
+
+- `(public)/` — login, landing
+- `(app)/` — área autenticada com `AuthenticatedShell`
+- Redirect raiz para dashboard ou login
+
+## Providers (ordem no layout)
+
+1. `AppProvider` (auth)
+2. `UiLocaleProvider` (i18n)
+
+## i18n
+
+- Chaves em `lib/i18n/messages.ts`
+- Hook `useUiLocale().t("chave", { vars })`
+- Storage: `template_ui_locale`
+
+## UI
+
+- shadcn new-york; adicionar via CLI
+- `cn()` de `lib/utils.ts`
+- Tailwind 4 em `app/globals.css`
+
+## Forms
+
+- Padrão: `useState` + form nativo
+- Mensagens de erro da API exibidas ao usuário
+
+## Extensão
+
+Novos endpoints: método em `api` + uso via `useApp` ou página.

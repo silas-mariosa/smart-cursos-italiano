@@ -1,0 +1,36 @@
+---
+description: Padrões arquiteturais do ecossistema template
+globs: **/*
+alwaysApply: true
+---
+
+# Arquitetura
+
+## Backend (Elysia + Bun)
+
+- Monólito modular: `src/resource/<feature>/route.ts` + `handle.ts`
+- `route.ts`: HTTP, guards Elysia, auth, status codes
+- `handle.ts`: queries Drizzle, retorno `{ data, error }` — sem importar Elysia
+- Schema único em `src/drizzle/schema.ts`
+- Registrar novos módulos em `src/index.ts` com `.use()`
+- Rotas admin centralizadas em prefixo `/admin`
+
+## Frontend / CRM (Next.js App Router)
+
+- Route groups: `(public)` e `(app)` ou `dashboard/`
+- `lib/api.ts` é o único ponto de HTTP
+- Proteção de rotas via layout/shell client-side
+- Componentes UI em `components/ui/` (shadcn new-york)
+
+## Mobile (Expo Router)
+
+- File-based routing em `app/`
+- `context/` para auth e tema
+- `hooks/` para React Query + fetch
+- Sem pasta `services/` centralizada
+
+## Princípios
+
+- Sem camada repository/service sem necessidade
+- Sem regras de negócio específicas nos templates
+- Infraestrutura reutilizável apenas

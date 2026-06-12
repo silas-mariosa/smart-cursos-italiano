@@ -1,0 +1,31 @@
+{
+  "folders": [
+    {
+      "name": "backend-template",
+      "path": "backend-template"
+    },
+    {
+      "name": "crm-template",
+      "path": "crm-template"
+    },
+    {
+      "name": "frontend-template",
+      "path": "frontend-template"
+
+    },
+    {
+      "name": "mobile-template",
+      "path": "mobile-template"
+
+    },
+    {
+      "name": "rules",
+      "path": ".cursor"
+    },
+    {
+      "name": "docs",
+      "path": "docs"
+    }
+
+   ]
+}

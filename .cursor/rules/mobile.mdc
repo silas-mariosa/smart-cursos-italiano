@@ -1,0 +1,48 @@
+---
+description: Regras do mobile-template
+globs: mobile-template/**/*
+alwaysApply: false
+---
+
+# Mobile
+
+## Scaffold
+
+- Projeto criado com `npx rn-new@latest --expo-router --nativewind`
+- NativeWind v4: `global.css`, `tailwind.config.js`, `metro.config.js` com `withNativeWind`
+- Estilos via `className` (Tailwind), não StyleSheet inline salvo exceções
+
+## Navegação
+
+- expo-router file-based em `app/`
+- `Stack` no root; layouts por área (`auth/`, `dashboard/`)
+- Redirect em `index.tsx` conforme token
+
+## Auth
+
+- `AuthProvider` em `context/AuthContext.tsx`
+- Token AsyncStorage chave `"token"`
+- `jwtDecode` para payload
+- Layout dashboard redireciona se `!token`
+
+## Dados
+
+- TanStack React Query em `hooks/`
+- `QueryClientProvider` apenas no `app/_layout.tsx`
+- Base URL: `EXPO_PUBLIC_API_URL` em `config/api.ts`
+- Sem pasta `services/` — fetch nos hooks
+
+## Componentes
+
+- UI compartilhada em `components/`
+- `Screen` wrapper para padding/safe area com NativeWind
+
+## Convenções
+
+- Sem integrações de pagamento/push nos templates
+- Textos pt-BR
+- New Architecture habilitada em `app.json`
+
+## Testes
+
+- jest-expo em `__tests__/`

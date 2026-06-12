@@ -1,0 +1,45 @@
+---
+description: Convenções de código TypeScript
+globs: **/*.{ts,tsx}
+alwaysApply: true
+---
+
+# Convenções de código
+
+## TypeScript
+
+- `strict: true` em todos os projetos
+- Path alias `@/*` nos clientes
+- Tipos inferidos do Drizzle quando possível
+- Evitar `any`; preferir tipos explícitos em APIs públicas
+
+## Nomenclatura
+
+- Tabelas/colunas: snake_case
+- IDs: UUID texto
+- Componentes React: PascalCase
+- Hooks: prefixo `use`
+- Handlers backend: funções exportadas em `handle.ts`
+
+## Retornos backend
+
+```typescript
+return { data: result, error: null };
+return { data: null, error: "Mensagem em pt-BR" };
+```
+
+## Clientes web
+
+- Proibido `fetch`/`axios` fora de `lib/api.ts`
+- Estado local com `useState` + `useEffect` por página (padrão admin)
+- Context para auth global
+
+## Comentários
+
+- Apenas para lógica não óbvia
+- Mensagens de usuário em pt-BR
+
+## Formatação
+
+- Prettier nos backends; ESLint nos projetos Next.js
+- Imports organizados: externos → internos → relativos

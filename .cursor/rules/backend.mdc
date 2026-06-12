@@ -1,0 +1,46 @@
+---
+description: Regras específicas do backend-template
+globs: backend-template/**/*
+alwaysApply: false
+---
+
+# Backend
+
+## Estrutura de recurso
+
+Ao criar novo domínio:
+
+```
+src/resource/<nome>/
+├── route.ts    # Elysia plugin com prefix
+└── handle.ts   # Lógica + Drizzle
+```
+
+Registrar em `src/index.ts`.
+
+## route.ts
+
+- Usar `.guard({ body: t.Object(...) })` para validação
+- Chamar `verifyBearerToken` ou `requireAdmin` de `src/lib/auth.ts`
+- Usar `handleRouteError` para erros
+- Mapear `{ data, error }` do handler para HTTP status
+
+## handle.ts
+
+- Importar `db` de `src/drizzle/db`
+- Retornar `ok()` / `fail()` de `src/lib/result.ts`
+- Sem dependência de Elysia
+
+## Config
+
+- Toda env validada em `src/config/env.ts`
+- Logger via `src/lib/logger.ts` (não `console.log` solto)
+
+## Swagger
+
+- Apenas quando `NODE_ENV !== "production"`
+
+## Testes
+
+- `bun:test` em `src/**/*.test.ts`
+- Testar helpers e lógica pura dos handlers
