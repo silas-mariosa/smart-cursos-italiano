@@ -1,6 +1,10 @@
 {
   "folders": [
     {
+      "name": "project-template",
+      "path": "."
+    },
+    {
       "name": "backend-template",
       "path": "backend-template"
     },
@@ -11,21 +15,27 @@
     {
       "name": "frontend-template",
       "path": "frontend-template"
-
     },
     {
       "name": "mobile-template",
       "path": "mobile-template"
-
-    },
-    {
-      "name": "rules",
-      "path": ".cursor"
     },
     {
       "name": "docs",
       "path": "docs"
+    },
+    {
+      "name": "template-analysis",
+      "path": "template-analysis"
+    },
+    {
+      "name": "rules",
+      "path": ".cursor"
     }
-
-   ]
+  ],
+  "settings": {
+    "git.autoRepositoryDetection": true,
+    "git.repositoryScanMaxDepth": 1,
+    "git.showProgress": true
+  }
 }
