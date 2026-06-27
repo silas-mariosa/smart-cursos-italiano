@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "mobile-template",
-    "slug": "mobile-template",
+    "name": "mobile-curso-italiano",
+    "slug": "mobile-curso-italiano",
     "version": "1.0.0",
     
     
-      "scheme": "mobile-template",
+      "scheme": "mobile-curso-italiano",
       "platforms": ["ios", "android"],
       "web": {
         "bundler": "metro",

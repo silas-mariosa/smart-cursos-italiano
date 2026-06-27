@@ -38,7 +38,7 @@ bun install
 bun run dev
 ```
 
-Configure `NEXT_PUBLIC_API_URL` apontando para o backend-template.
+Configure `NEXT_PUBLIC_API_URL` apontando para o backend-curso-italiano.
 
 ## Extensão
 

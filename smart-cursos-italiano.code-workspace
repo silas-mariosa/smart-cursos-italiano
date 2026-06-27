@@ -5,20 +5,20 @@
       "path": "."
     },
     {
-      "name": "backend-template",
-      "path": "backend-template"
+      "name": "backend-curso-italiano",
+      "path": "backend-curso-italiano"
     },
     {
-      "name": "crm-template",
-      "path": "crm-template"
+      "name": "crm-curso-italiano",
+      "path": "crm-curso-italiano"
     },
     {
-      "name": "frontend-template",
-      "path": "frontend-template"
+      "name": "frontend-curso-italiano",
+      "path": "frontend-curso-italiano"
     },
     {
-      "name": "mobile-template",
-      "path": "mobile-template"
+      "name": "mobile-curso-italiano",
+      "path": "mobile-curso-italiano"
     },
     {
       "name": "docs",

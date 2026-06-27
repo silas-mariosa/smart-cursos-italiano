@@ -45,8 +45,8 @@ bun install
 bun run dev
 ```
 
-Use credenciais do admin criado pelo `backend-template` seed.
+Use credenciais do admin criado pelo `backend-curso-italiano` seed.
 
 ## Extensão
 
-Novos módulos admin: adicionar rotas em `app/dashboard/` e endpoints em `lib/api.ts` + `backend-template/src/resource/admin/`.
+Novos módulos admin: adicionar rotas em `app/dashboard/` e endpoints em `lib/api.ts` + `backend-curso-italiano/src/resource/admin/`.

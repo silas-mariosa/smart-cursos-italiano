@@ -1,6 +1,6 @@
 ---
-description: Regras do mobile-template
-globs: mobile-template/**/*
+description: Regras do mobile-curso-italiano
+globs: mobile-curso-italiano/**/*
 alwaysApply: false
 ---
 

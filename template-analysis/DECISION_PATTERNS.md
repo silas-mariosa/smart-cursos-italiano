@@ -26,10 +26,10 @@ Todas as decisões abaixo documentam a evidência e a escolha.
 | Framework web | Next.js 16 App Router | Parlare mais recente | `frontend-parlare` 16.1.1 vs Balaio 15 |
 | UI kit | shadcn new-york | Ambos ecossistemas web | `components.json` |
 | CSS | Tailwind 4 | Parlare (mais moderno) | `postcss.config.mjs` |
-| Mobile | Expo 54 + expo-router 6 + NativeWind v4 | Balaio (Expo/router); template via rn-new | `mobile-template/package.json` |
-| Scaffold mobile | rn-new (Create Expo Stack) | Pedido do usuário + setup oficial NativeWind no RN | `mobile-template/README.md` |
+| Mobile | Expo 54 + expo-router 6 + NativeWind v4 | Balaio (Expo/router); template via rn-new | `mobile-curso-italiano/package.json` |
+| Scaffold mobile | rn-new (Create Expo Stack) | Pedido do usuário + setup oficial NativeWind no RN | `mobile-curso-italiano/README.md` |
 | CSS mobile | NativeWind v4 (`className`) | Tailwind no RN; integrado de fábrica pelo rn-new | `global.css`, `tailwind.config.js` |
-| PM mobile | Bun | Alinhado ao backend; flag `--bun` do rn-new | `mobile-template/package.json` |
+| PM mobile | Bun | Alinhado ao backend; flag `--bun` do rn-new | `mobile-curso-italiano/package.json` |
 | Estado mobile | React Query + Context | Balaio + docs Parlare mobile | `hooks/`, `reactQueryClient.ts` |
 
 ---

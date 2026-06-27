@@ -5,7 +5,7 @@ Template de **infraestrutura mobile** (sem regras de negócio), gerado com [Crea
 ## Como foi criado
 
 ```bash
-npx rn-new@latest mobile-template --expo-router --nativewind --no-git --bun
+npx rn-new@latest mobile-curso-italiano --expo-router --nativewind --no-git --bun
 ```
 
 > No Windows, o passo final `expo install --fix` do CLI pode falhar. Rode manualmente na pasta do projeto:
@@ -31,7 +31,7 @@ npx rn-new@latest mobile-template --expo-router --nativewind --no-git --bun
 ## Arquitetura
 
 ```
-mobile-template/
+mobile-curso-italiano/
 ├── app/
 │   ├── _layout.tsx        # Providers (Query, Auth, SafeArea, NativeWind)
 │   ├── index.tsx          # Redirect auth ↔ dashboard
@@ -58,13 +58,13 @@ mobile-template/
 ## Início rápido
 
 ```bash
-cd mobile-template
+cd mobile-curso-italiano
 bun install
 cp .env.example .env   # ajuste EXPO_PUBLIC_API_URL
 bun run start
 ```
 
-Requer o backend-template rodando (ex.: `http://localhost:4000`) para login e `/auth/me`.
+Requer o backend-curso-italiano rodando (ex.: `http://localhost:4000`) para login e `/auth/me`.
 
 ## Variáveis de ambiente
 

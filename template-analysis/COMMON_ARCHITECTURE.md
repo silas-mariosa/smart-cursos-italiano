@@ -136,7 +136,7 @@ mobile/
 └── assets/
 ```
 
-**Evidência:** `mobile-template/` (gerado com `rn-new --expo-router --nativewind --bun`); padrões hooks/auth de `mobile-balaioCriativo/`
+**Evidência:** `mobile-curso-italiano/` (gerado com `rn-new --expo-router --nativewind --bun`); padrões hooks/auth de `mobile-balaioCriativo/`
 
 **Padrão API mobile:** Hooks por feature, sem pasta `services/` centralizada.
 

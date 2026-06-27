@@ -92,13 +92,13 @@ Porta dev sugerida: **3001** (`RDA.md` admin).
 
 ## Mobile (evidências)
 
-**Projeto template:** `mobile-template`  
+**Projeto template:** `mobile-curso-italiano`  
 **Referência legada:** `mobile-balaioCriativo` (padrões de hooks/auth; sem NativeWind)
 
 ### Geração do projeto
 
 ```bash
-npx rn-new@latest mobile-template --expo-router --nativewind --no-git --bun
+npx rn-new@latest mobile-curso-italiano --expo-router --nativewind --no-git --bun
 ```
 
 [Create Expo Stack](https://rn.new) (`rn-new`) — scaffolding oficial com expo-router, NativeWind e Bun.
@@ -137,7 +137,7 @@ npx rn-new@latest mobile-template --expo-router --nativewind --no-git --bun
 - Dados remotos: hooks em `hooks/` com React Query (sem pasta `services/`)
 - Estilos: `className` via NativeWind; componente `Screen` para layout
 
-**Evidência:** `mobile-template/package.json`, `mobile-template/bun.lock`, `mobile-template/README.md`
+**Evidência:** `mobile-curso-italiano/package.json`, `mobile-curso-italiano/bun.lock`, `mobile-curso-italiano/README.md`
 
 ---
 

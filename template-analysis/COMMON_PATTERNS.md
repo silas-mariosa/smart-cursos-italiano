@@ -132,7 +132,7 @@ export function useExample() {
 
 **Mobile e admin:** textos hardcoded pt-BR.
 
-**Decisão template:** i18n no frontend-template; pt-BR fixo no CRM e mobile.
+**Decisão template:** i18n no frontend-curso-italiano; pt-BR fixo no CRM e mobile.
 
 ---
 

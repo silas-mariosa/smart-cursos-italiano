@@ -1,6 +1,6 @@
 ---
-description: Regras específicas do backend-template
-globs: backend-template/**/*
+description: Regras específicas do backend-curso-italiano
+globs: backend-curso-italiano/**/*
 alwaysApply: false
 ---
 

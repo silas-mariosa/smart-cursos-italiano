@@ -1,6 +1,6 @@
 ---
-description: Regras do frontend-template
-globs: frontend-template/**/*
+description: Regras do frontend-curso-italiano
+globs: frontend-curso-italiano/**/*
 alwaysApply: false
 ---
 
