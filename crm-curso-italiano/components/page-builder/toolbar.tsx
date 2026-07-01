@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Eye, Monitor, Redo2, Smartphone, Tablet, Undo2 } from "lucide-react";
 import type { Breakpoint } from "@lms-mocks/page-builder-types";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ interface PageBuilderToolbarProps {
   onUndo: () => void;
   onRedo: () => void;
   onBreakpoint: (bp: Breakpoint) => void;
-  onPreview: () => void;
+  previewHref?: string;
+  onPreview?: () => void;
 }
 
 export function PageBuilderToolbar({
@@ -25,6 +27,7 @@ export function PageBuilderToolbar({
   onUndo,
   onRedo,
   onBreakpoint,
+  previewHref,
   onPreview,
 }: PageBuilderToolbarProps) {
   const devices: { id: Breakpoint; icon: React.ComponentType<{ className?: string }>; label: string }[] = [
@@ -64,9 +67,17 @@ export function PageBuilderToolbar({
 
       <div className="flex items-center gap-2">
         {saved && <Badge variant="success">Salvo automaticamente</Badge>}
-        <Button type="button" variant="outline" size="sm" onClick={onPreview}>
-          <Eye className="size-3.5 mr-1" /> Pré-visualizar
-        </Button>
+        {previewHref ? (
+          <Link href={previewHref}>
+            <Button variant="outline" size="sm">
+              <Eye className="size-3.5 mr-1" /> Pré-visualizar
+            </Button>
+          </Link>
+        ) : (
+          <Button type="button" variant="outline" size="sm" onClick={onPreview}>
+            <Eye className="size-3.5 mr-1" /> Pré-visualizar
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,20 @@
-import type { ComponentType, PageComponent, PageDocument, PageSection } from "@lms-mocks/page-builder-types";
+import type { ComponentType, PageComponent, PageColumn, PageDocument, PageRow, PageSection } from "@lms-mocks/page-builder-types";
 
 export function pbId(prefix = "pb"): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createRow(components: PageComponent[] = []): PageRow {
+  return { id: pbId("row"), components };
+}
+
+export function createColumn(span: number, components: PageComponent[] = []): PageColumn {
+  return {
+    id: pbId("col"),
+    span,
+    rowCount: 1,
+    rows: [createRow(components)],
+  };
 }
 
 export function createEmptyDocument(): PageDocument {
@@ -14,11 +27,12 @@ export function createEmptyDocument(): PageDocument {
 }
 
 export function createSection(label: string, columnCount: number): PageSection {
-  const columns = Array.from({ length: columnCount }, (_, i) => ({
-    id: pbId("col"),
-    span: Math.floor(12 / columnCount),
-    components: i === 0 ? [createComponent("heading"), createComponent("paragraph")] : [],
-  }));
+  const columns = Array.from({ length: columnCount }, (_, i) =>
+    createColumn(
+      Math.floor(12 / columnCount),
+      i === 0 ? [createComponent("heading"), createComponent("paragraph")] : [],
+    ),
+  );
   return { id: pbId("sec"), label, columnCount, columns };
 }
 

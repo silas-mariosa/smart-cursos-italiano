@@ -1,5 +1,6 @@
 import type { PageSection, SavedLayout } from "@lms-mocks/page-builder-types";
-import { createComponent, createSection, pbId } from "./defaults";
+import { createColumn, createComponent, createSection, pbId } from "./defaults";
+import { normalizeColumn } from "./document";
 
 function cloneSection(section: PageSection): PageSection {
   return JSON.parse(JSON.stringify(section)) as PageSection;
@@ -23,26 +24,16 @@ export const LAYOUT_TEMPLATES: SavedLayout[] = [
           typography: { textAlign: "center" },
         },
         columns: [
-          {
-            id: pbId("col"),
-            span: 12,
-            components: [
-              { ...createComponent("heading"), props: { text: "Bem-vindo à aula", level: 2 }, style: { typography: { fontSize: 32, fontWeight: 700 } } },
-              { ...createComponent("paragraph"), props: { text: "Nesta aula você aprenderá conceitos essenciais de forma prática e objetiva." } },
-              { ...createComponent("button"), props: { label: "Começar", url: "#", variant: "solid" } },
-            ],
-          },
+          createColumn(12, [
+            { ...createComponent("heading"), props: { text: "Bem-vindo à aula", level: 2 }, style: { typography: { fontSize: 32, fontWeight: 700 } } },
+            { ...createComponent("paragraph"), props: { text: "Nesta aula você aprenderá conceitos essenciais de forma prática e objetiva." } },
+            { ...createComponent("button"), props: { label: "Começar", url: "#", variant: "solid" } },
+          ]),
         ],
       },
       {
         ...createSection("Conteúdo", 1),
-        columns: [
-          {
-            id: pbId("col"),
-            span: 12,
-            components: [createComponent("heading"), createComponent("paragraph"), createComponent("callout")],
-          },
-        ],
+        columns: [createColumn(12, [createComponent("heading"), createComponent("paragraph"), createComponent("callout")])],
       },
     ],
   },
@@ -57,16 +48,8 @@ export const LAYOUT_TEMPLATES: SavedLayout[] = [
         ...createSection("Duas colunas", 2),
         style: { gap: 24, padding: { top: 24, bottom: 24 } },
         columns: [
-          {
-            id: pbId("col"),
-            span: 6,
-            components: [createComponent("heading"), createComponent("paragraph"), createComponent("list")],
-          },
-          {
-            id: pbId("col"),
-            span: 6,
-            components: [createComponent("image"), createComponent("callout")],
-          },
+          createColumn(6, [createComponent("heading"), createComponent("paragraph"), createComponent("list")]),
+          createColumn(6, [createComponent("image"), createComponent("callout")]),
         ],
       },
     ],
@@ -81,18 +64,14 @@ export const LAYOUT_TEMPLATES: SavedLayout[] = [
       {
         ...createSection("Vocabulário", 1),
         columns: [
-          {
-            id: pbId("col"),
-            span: 12,
-            components: [
-              { ...createComponent("heading"), props: { text: "Vocabulário da aula", level: 2 } },
-              createComponent("table"),
-              createComponent("separator"),
-              { ...createComponent("heading"), props: { text: "Frases úteis", level: 3 } },
-              createComponent("list"),
-              createComponent("accordion"),
-            ],
-          },
+          createColumn(12, [
+            { ...createComponent("heading"), props: { text: "Vocabulário da aula", level: 2 } },
+            createComponent("table"),
+            createComponent("separator"),
+            { ...createComponent("heading"), props: { text: "Frases úteis", level: 3 } },
+            createComponent("list"),
+            createComponent("accordion"),
+          ]),
         ],
       },
     ],
@@ -108,24 +87,17 @@ export const LAYOUT_TEMPLATES: SavedLayout[] = [
         ...createSection("Vídeo", 1),
         style: { maxWidth: "wide", align: "center" },
         columns: [
-          {
-            id: pbId("col"),
-            span: 12,
-            components: [
-              { ...createComponent("heading"), props: { text: "Assista à aula", level: 2 } },
-              createComponent("video"),
-              createComponent("paragraph"),
-            ],
-          },
+          createColumn(12, [
+            { ...createComponent("heading"), props: { text: "Assista à aula", level: 2 } },
+            createComponent("video"),
+            createComponent("paragraph"),
+          ]),
         ],
       },
       {
         ...createSection("Material", 2),
         style: { gap: 16 },
-        columns: [
-          { id: pbId("col"), span: 6, components: [createComponent("file-download")] },
-          { id: pbId("col"), span: 6, components: [createComponent("card")] },
-        ],
+        columns: [createColumn(6, [createComponent("file-download")]), createColumn(6, [createComponent("card")])],
       },
     ],
   },
@@ -138,11 +110,11 @@ export const LAYOUT_TEMPLATES: SavedLayout[] = [
     sections: [
       {
         ...createSection("Tópicos", 1),
-        columns: [{ id: pbId("col"), span: 12, components: [createComponent("heading"), createComponent("card-grid")] }],
+        columns: [createColumn(12, [createComponent("heading"), createComponent("card-grid")])],
       },
       {
         ...createSection("Próximo passo", 1),
-        columns: [{ id: pbId("col"), span: 12, components: [createComponent("cta")] }],
+        columns: [createColumn(12, [createComponent("cta")])],
       },
     ],
   },
@@ -160,11 +132,18 @@ export function cloneLayoutSections(layout: SavedLayout): PageSection[] {
   return layout.sections.map((s) => {
     const cloned = cloneSection(s);
     cloned.id = pbId("sec");
-    cloned.columns = cloned.columns.map((col) => ({
-      ...col,
-      id: pbId("col"),
-      components: col.components.map((c) => ({ ...c, id: pbId("cmp") })),
-    }));
+    cloned.columns = cloned.columns.map((col) => {
+      const normalized = normalizeColumn(col);
+      return {
+        ...normalized,
+        id: pbId("col"),
+        rows: normalized.rows.map((row) => ({
+          ...row,
+          id: pbId("row"),
+          components: row.components.map((c) => ({ ...c, id: pbId("cmp") })),
+        })),
+      };
+    });
     return cloned;
   });
 }

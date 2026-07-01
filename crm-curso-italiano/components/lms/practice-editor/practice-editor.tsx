@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { LessonPracticeSettings, PracticeModuleId } from "@lms-mocks/lesson-practice-types";
 import type { LessonBlock } from "@lms-mocks/types";
 import type { Exercise } from "@lms-mocks/types";
@@ -30,7 +31,7 @@ interface PracticeEditorProps {
   exercises: Exercise[];
   onSettingsChange: (settings: LessonPracticeSettings) => void;
   onExerciseBlocksChange: (blocks: LessonBlock[]) => void;
-  previewUrl: string;
+  previewHref: string;
 }
 
 export function PracticeEditor({
@@ -40,7 +41,7 @@ export function PracticeEditor({
   exercises,
   onSettingsChange,
   onExerciseBlocksChange,
-  previewUrl,
+  previewHref,
 }: PracticeEditorProps) {
   const [activeModule, setActiveModule] = useState<PracticeModuleId | "settings">("quizzes");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -78,11 +79,11 @@ export function PracticeEditor({
           ))}
         </div>
         <div className="flex gap-2">
-          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+          <Link href={previewHref}>
             <Button type="button" variant="outline" size="sm">
               <Eye className="size-3.5 mr-1" /> Preview aluno
             </Button>
-          </a>
+          </Link>
           <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
             Resumo
           </Button>

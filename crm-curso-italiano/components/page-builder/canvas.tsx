@@ -10,9 +10,10 @@ import {
   addSection,
   duplicateComponent,
   duplicateSection,
+  normalizeColumn,
   removeComponent,
   removeSection,
-  reorderComponentInColumn,
+  reorderComponentInRow,
   reorderSections,
 } from "@/lib/page-builder/document";
 
@@ -31,7 +32,13 @@ const BREAKPOINT_WIDTH = {
 };
 
 export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, onChange }: PageBuilderCanvasProps) {
-  const [dragged, setDragged] = useState<{ kind: "section" | "component"; id: string; sectionId?: string; columnId?: string } | null>(null);
+  const [dragged, setDragged] = useState<{
+    kind: "section" | "component";
+    id: string;
+    sectionId?: string;
+    columnId?: string;
+    rowId?: string;
+  } | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string; after: boolean } | null>(null);
 
   return (
@@ -123,6 +130,7 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
                     }}
                   >
                     {section.columns.map((col) => {
+                      const normalizedCol = normalizeColumn(col);
                       const colSelected = selection?.kind === "column" && selection.columnId === col.id;
                       return (
                         <div
@@ -132,102 +140,142 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
                             onSelect({ kind: "column", sectionId: section.id, columnId: col.id });
                           }}
                           className={cn(
-                            "min-h-[80px] rounded-lg border border-dashed p-3 transition-colors",
+                            "min-h-[80px] rounded-lg border border-dashed p-2 transition-colors space-y-2",
                             colSelected ? "border-primary bg-primary/5" : "border-muted-foreground/20 hover:border-primary/40",
                           )}
                         >
-                          <div className="space-y-3">
-                            {col.components.map((comp) => {
-                              const compSelected =
-                                selection?.kind === "component" && selection.componentId === comp.id;
-                              return (
-                                <div
-                                  key={comp.id}
-                                  draggable
-                                  onDragStart={(e) => {
-                                    e.stopPropagation();
-                                    setDragged({ kind: "component", id: comp.id, sectionId: section.id, columnId: col.id });
-                                  }}
-                                  onDragEnd={() => {
-                                    setDragged(null);
-                                    setDropTarget(null);
-                                  }}
-                                  onDragOver={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (dragged?.kind === "component" && dragged.id !== comp.id) {
-                                      const rect = e.currentTarget.getBoundingClientRect();
-                                      setDropTarget({ id: comp.id, after: e.clientY > rect.top + rect.height / 2 });
-                                    }
-                                  }}
-                                  onDrop={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (dragged?.kind === "component" && dragged.sectionId && dragged.columnId && dropTarget) {
-                                      onChange(
-                                        reorderComponentInColumn(
-                                          document,
-                                          dragged.sectionId,
-                                          dragged.columnId,
-                                          dragged.id,
-                                          dropTarget.id,
-                                          dropTarget.after,
-                                        ),
-                                      );
-                                    }
-                                    setDragged(null);
-                                    setDropTarget(null);
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onSelect({
-                                      kind: "component",
-                                      sectionId: section.id,
-                                      columnId: col.id,
-                                      componentId: comp.id,
-                                    });
-                                  }}
-                                  className={cn(
-                                    "group/comp relative rounded-lg border p-2 cursor-pointer transition-all",
-                                    compSelected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-transparent hover:border-muted-foreground/30 hover:shadow-sm",
-                                    dragged?.id === comp.id && "opacity-50",
-                                    dropTarget?.id === comp.id && !dropTarget.after && "border-t-2 border-t-green-500",
-                                    dropTarget?.id === comp.id && dropTarget.after && "border-b-2 border-b-green-500",
+                          {normalizedCol.rows.map((row, rowIndex) => {
+                            const rowSelected = selection?.kind === "row" && selection.rowId === row.id;
+                            return (
+                              <div
+                                key={row.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onSelect({ kind: "row", sectionId: section.id, columnId: col.id, rowId: row.id });
+                                }}
+                                className={cn(
+                                  "min-h-[56px] rounded-md border border-dashed p-2 transition-colors",
+                                  rowSelected
+                                    ? "border-primary/70 bg-primary/5"
+                                    : "border-muted-foreground/15 hover:border-primary/30 bg-background/50",
+                                )}
+                              >
+                                <p className="text-[10px] font-medium text-muted-foreground mb-2">
+                                  Linha {rowIndex + 1}
+                                </p>
+                                <div className="space-y-3">
+                                  {row.components.map((comp) => {
+                                    const compSelected =
+                                      selection?.kind === "component" && selection.componentId === comp.id;
+                                    return (
+                                      <div
+                                        key={comp.id}
+                                        draggable
+                                        onDragStart={(e) => {
+                                          e.stopPropagation();
+                                          setDragged({
+                                            kind: "component",
+                                            id: comp.id,
+                                            sectionId: section.id,
+                                            columnId: col.id,
+                                            rowId: row.id,
+                                          });
+                                        }}
+                                        onDragEnd={() => {
+                                          setDragged(null);
+                                          setDropTarget(null);
+                                        }}
+                                        onDragOver={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (dragged?.kind === "component" && dragged.id !== comp.id) {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            setDropTarget({ id: comp.id, after: e.clientY > rect.top + rect.height / 2 });
+                                          }
+                                        }}
+                                        onDrop={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (
+                                            dragged?.kind === "component" &&
+                                            dragged.sectionId &&
+                                            dragged.columnId &&
+                                            dragged.rowId &&
+                                            dropTarget
+                                          ) {
+                                            onChange(
+                                              reorderComponentInRow(
+                                                document,
+                                                dragged.sectionId,
+                                                dragged.columnId,
+                                                dragged.rowId,
+                                                dragged.id,
+                                                dropTarget.id,
+                                                dropTarget.after,
+                                              ),
+                                            );
+                                          }
+                                          setDragged(null);
+                                          setDropTarget(null);
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onSelect({
+                                            kind: "component",
+                                            sectionId: section.id,
+                                            columnId: col.id,
+                                            rowId: row.id,
+                                            componentId: comp.id,
+                                          });
+                                        }}
+                                        className={cn(
+                                          "group/comp relative rounded-lg border p-2 cursor-pointer transition-all",
+                                          compSelected
+                                            ? "border-primary ring-2 ring-primary/20 bg-primary/5"
+                                            : "border-transparent hover:border-muted-foreground/30 hover:shadow-sm",
+                                          dragged?.id === comp.id && "opacity-50",
+                                          dropTarget?.id === comp.id && !dropTarget.after && "border-t-2 border-t-green-500",
+                                          dropTarget?.id === comp.id && dropTarget.after && "border-b-2 border-b-green-500",
+                                        )}
+                                      >
+                                        <div className="absolute -left-1 top-2 opacity-0 group-hover/comp:opacity-100">
+                                          <GripVertical className="size-3 text-muted-foreground" />
+                                        </div>
+                                        <div className="absolute -right-1 -top-1 opacity-0 group-hover/comp:opacity-100 flex gap-0.5 bg-background border rounded shadow-sm">
+                                          <button
+                                            type="button"
+                                            className="p-1 hover:bg-accent rounded"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onChange(duplicateComponent(document, section.id, col.id, row.id, comp.id));
+                                            }}
+                                          >
+                                            <Copy className="size-3" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="p-1 hover:bg-accent rounded"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onChange(removeComponent(document, section.id, col.id, row.id, comp.id));
+                                            }}
+                                          >
+                                            <Trash2 className="size-3 text-red-500" />
+                                          </button>
+                                        </div>
+                                        <ComponentPreview component={comp} />
+                                      </div>
+                                    );
+                                  })}
+                                  {row.components.length === 0 && (
+                                    <p className="text-xs text-center text-muted-foreground py-2">
+                                      Clique aqui e adicione blocos nesta linha
+                                    </p>
                                   )}
-                                >
-                                  <div className="absolute -left-1 top-2 opacity-0 group-hover/comp:opacity-100">
-                                    <GripVertical className="size-3 text-muted-foreground" />
-                                  </div>
-                                  <div className="absolute -right-1 -top-1 opacity-0 group-hover/comp:opacity-100 flex gap-0.5 bg-background border rounded shadow-sm">
-                                    <button
-                                      type="button"
-                                      className="p-1 hover:bg-accent rounded"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onChange(duplicateComponent(document, section.id, col.id, comp.id));
-                                      }}
-                                    >
-                                      <Copy className="size-3" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="p-1 hover:bg-accent rounded"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        onChange(removeComponent(document, section.id, col.id, comp.id));
-                                      }}
-                                    >
-                                      <Trash2 className="size-3 text-red-500" />
-                                    </button>
-                                  </div>
-                                  <ComponentPreview component={comp} />
                                 </div>
-                              );
-                            })}
-                            {col.components.length === 0 && (
-                              <p className="text-xs text-center text-muted-foreground py-4">Arraste ou adicione blocos</p>
-                            )}
-                          </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })}

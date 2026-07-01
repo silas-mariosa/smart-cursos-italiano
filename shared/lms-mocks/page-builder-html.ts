@@ -221,16 +221,27 @@ function renderComponent(c: PageComponent): string {
   }
 }
 
-function renderSection(section: PageSection): string {
-  const sectionStyle = boxStyleToCss(section.style);
-  const cols = section.columns
-    .map((col) => {
-      const colStyle = boxStyleToCss(col.style);
-      const inner = col.components.map(renderComponent).join("\n");
-      const flex = section.columnCount > 1 ? `flex:1;min-width:0` : "width:100%";
-      return `<div data-pb-column style="${flex};${colStyle}">${inner || "&nbsp;"}</div>`;
+function renderColumn(col: import("./page-builder-types").PageColumn, columnCount: number): string {
+  const colStyle = boxStyleToCss(col.style);
+  const flex = columnCount > 1 ? `flex:1;min-width:0` : "width:100%";
+  const rows = col.rows?.length
+    ? col.rows
+    : [{ id: "legacy", components: col.components ?? [] }];
+  const rowGap = col.style?.gap ?? 12;
+  const rowsHtml = rows
+    .map((row) => {
+      const rowStyle = boxStyleToCss(row.style);
+      const inner = row.components.map(renderComponent).join("\n");
+      return `<div data-pb-row style="display:flex;flex-direction:column;gap:8px;${rowStyle}">${inner || "&nbsp;"}</div>`;
     })
     .join("");
+  const inner = `<div data-pb-column-rows style="display:flex;flex-direction:column;gap:${rowGap}px">${rowsHtml}</div>`;
+  return `<div data-pb-column style="${flex};${colStyle}">${inner}</div>`;
+}
+
+function renderSection(section: PageSection): string {
+  const sectionStyle = boxStyleToCss(section.style);
+  const cols = section.columns.map((col) => renderColumn(col, section.columnCount)).join("");
   const grid =
     section.columnCount > 1
       ? `display:flex;flex-wrap:wrap;gap:${section.style?.gap ?? 16}px`

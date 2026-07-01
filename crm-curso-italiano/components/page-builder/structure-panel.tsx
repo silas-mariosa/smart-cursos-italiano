@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Columns, Component, Layers } from "lucide-react";
+import { ChevronDown, ChevronRight, Columns, Component, Layers, Rows3 } from "lucide-react";
 import type { PageDocument, SelectionTarget } from "@lms-mocks/page-builder-types";
 import { getCatalogLabel } from "@/lib/page-builder/catalog";
+import { normalizeColumn } from "@/lib/page-builder/document";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
@@ -22,10 +23,18 @@ export function StructurePanel({ document, selection, onSelect }: StructurePanel
     if (sel.kind === "section") return selection.kind === "section" && selection.sectionId === sel.sectionId;
     if (sel.kind === "column")
       return selection.kind === "column" && selection.sectionId === sel.sectionId && selection.columnId === sel.columnId;
+    if (sel.kind === "row")
+      return (
+        selection.kind === "row" &&
+        selection.sectionId === sel.sectionId &&
+        selection.columnId === sel.columnId &&
+        selection.rowId === sel.rowId
+      );
     return (
       selection.kind === "component" &&
       selection.sectionId === sel.sectionId &&
       selection.columnId === sel.columnId &&
+      selection.rowId === sel.rowId &&
       selection.componentId === sel.componentId
     );
   }
@@ -54,48 +63,76 @@ export function StructurePanel({ document, selection, onSelect }: StructurePanel
                 <span className="text-muted-foreground ml-auto">{section.columnCount}c</span>
               </button>
               {secOpen &&
-                section.columns.map((col, ci) => (
-                  <div key={col.id} className="ml-4">
-                    <button
-                      type="button"
-                      className={cn(
-                        "w-full flex items-center gap-1 px-2 py-1 rounded text-left text-xs hover:bg-accent",
-                        isSelected({ kind: "column", sectionId: section.id, columnId: col.id }) && "bg-primary/10 text-primary",
-                      )}
-                      onClick={() => onSelect({ kind: "column", sectionId: section.id, columnId: col.id })}
-                    >
-                      <Columns className="size-3" />
-                      Coluna {ci + 1}
-                      <span className="text-muted-foreground ml-auto">{col.components.length}</span>
-                    </button>
-                    {col.components.map((comp) => (
+                section.columns.map((col, ci) => {
+                  const normalized = normalizeColumn(col);
+                  return (
+                    <div key={col.id} className="ml-4">
                       <button
-                        key={comp.id}
                         type="button"
                         className={cn(
-                          "w-full flex items-center gap-1 px-2 py-1 ml-4 rounded text-left text-[11px] hover:bg-accent text-muted-foreground",
-                          isSelected({
-                            kind: "component",
-                            sectionId: section.id,
-                            columnId: col.id,
-                            componentId: comp.id,
-                          }) && "bg-primary/10 text-primary font-medium",
+                          "w-full flex items-center gap-1 px-2 py-1 rounded text-left text-xs hover:bg-accent",
+                          isSelected({ kind: "column", sectionId: section.id, columnId: col.id }) && "bg-primary/10 text-primary",
                         )}
-                        onClick={() =>
-                          onSelect({
-                            kind: "component",
-                            sectionId: section.id,
-                            columnId: col.id,
-                            componentId: comp.id,
-                          })
-                        }
+                        onClick={() => onSelect({ kind: "column", sectionId: section.id, columnId: col.id })}
                       >
-                        <Component className="size-3" />
-                        {getCatalogLabel(comp.type)}
+                        <Columns className="size-3" />
+                        Coluna {ci + 1}
+                        <span className="text-muted-foreground ml-auto">{normalized.rowCount}l</span>
                       </button>
-                    ))}
-                  </div>
-                ))}
+                      {normalized.rows.map((row, ri) => (
+                        <div key={row.id} className="ml-4">
+                          <button
+                            type="button"
+                            className={cn(
+                              "w-full flex items-center gap-1 px-2 py-1 rounded text-left text-xs hover:bg-accent",
+                              isSelected({
+                                kind: "row",
+                                sectionId: section.id,
+                                columnId: col.id,
+                                rowId: row.id,
+                              }) && "bg-primary/10 text-primary",
+                            )}
+                            onClick={() =>
+                              onSelect({ kind: "row", sectionId: section.id, columnId: col.id, rowId: row.id })
+                            }
+                          >
+                            <Rows3 className="size-3" />
+                            Linha {ri + 1}
+                            <span className="text-muted-foreground ml-auto">{row.components.length}</span>
+                          </button>
+                          {row.components.map((comp) => (
+                            <button
+                              key={comp.id}
+                              type="button"
+                              className={cn(
+                                "w-full flex items-center gap-1 px-2 py-1 ml-4 rounded text-left text-[11px] hover:bg-accent text-muted-foreground",
+                                isSelected({
+                                  kind: "component",
+                                  sectionId: section.id,
+                                  columnId: col.id,
+                                  rowId: row.id,
+                                  componentId: comp.id,
+                                }) && "bg-primary/10 text-primary font-medium",
+                              )}
+                              onClick={() =>
+                                onSelect({
+                                  kind: "component",
+                                  sectionId: section.id,
+                                  columnId: col.id,
+                                  rowId: row.id,
+                                  componentId: comp.id,
+                                })
+                              }
+                            >
+                              <Component className="size-3" />
+                              {getCatalogLabel(comp.type)}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
             </div>
           );
         })}

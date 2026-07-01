@@ -74,12 +74,22 @@ export interface PageComponent {
   reusableId?: string;
 }
 
-export interface PageColumn {
+export interface PageRow {
   id: string;
-  span: number;
   style?: BoxStyle;
   responsive?: ResponsiveStyle;
   components: PageComponent[];
+}
+
+export interface PageColumn {
+  id: string;
+  span: number;
+  rowCount: number;
+  rows: PageRow[];
+  style?: BoxStyle;
+  responsive?: ResponsiveStyle;
+  /** Legado — migrado automaticamente para `rows` */
+  components?: PageComponent[];
 }
 
 export interface PageSection {
@@ -119,5 +129,6 @@ export interface PageDocument {
 export type SelectionTarget =
   | { kind: "section"; sectionId: string }
   | { kind: "column"; sectionId: string; columnId: string }
-  | { kind: "component"; sectionId: string; columnId: string; componentId: string }
+  | { kind: "row"; sectionId: string; columnId: string; rowId: string }
+  | { kind: "component"; sectionId: string; columnId: string; rowId: string; componentId: string }
   | null;

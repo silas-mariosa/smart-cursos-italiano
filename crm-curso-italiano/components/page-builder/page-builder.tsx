@@ -9,15 +9,16 @@ import { LibraryPanel } from "@/components/page-builder/library-panel";
 import { StructurePanel } from "@/components/page-builder/structure-panel";
 import { PropertiesPanel } from "@/components/page-builder/properties-panel";
 import { PageBuilderCanvas } from "@/components/page-builder/canvas";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   addComponent,
   appendLayout,
   insertComponent,
+  normalizeDocument,
   replaceWithLayout,
+  setColumnRowCount,
   setSectionColumnCount,
+  updateColumn,
   updateComponent,
   updateSection,
 } from "@/lib/page-builder/document";
@@ -27,19 +28,19 @@ import type { SavedLayout } from "@lms-mocks/page-builder-types";
 interface PageBuilderProps {
   initialDocument: PageDocument;
   onSave: (doc: PageDocument, html: string) => void;
+  previewHref?: string;
 }
 
-export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
-  const { document, setDocument, undo, redo, canUndo, canRedo, reset } = usePageHistory(initialDocument);
+export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilderProps) {
+  const { document, setDocument, undo, redo, canUndo, canRedo, reset } = usePageHistory(normalizeDocument(initialDocument));
   const [selection, setSelection] = useState<SelectionTarget>(null);
   const [breakpoint, setBreakpoint] = useState<Breakpoint>("desktop");
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [saved, setSaved] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstMount = useRef(true);
 
   useEffect(() => {
-    reset(initialDocument);
+    reset(normalizeDocument(initialDocument));
     setSelection(null);
   }, [initialDocument, reset]);
 
@@ -69,21 +70,35 @@ export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
 
   const activeSectionId = selection?.sectionId ?? document.sections[0]?.id ?? null;
   const activeColumnId =
-    selection?.kind === "column" || selection?.kind === "component"
+    selection?.kind === "column" || selection?.kind === "row" || selection?.kind === "component"
       ? selection.columnId
       : document.sections.find((s) => s.id === activeSectionId)?.columns[0]?.id ?? null;
+  const activeRowId = (() => {
+    if (!activeSectionId || !activeColumnId) return null;
+    const column = document.sections
+      .find((s) => s.id === activeSectionId)
+      ?.columns.find((c) => c.id === activeColumnId);
+    if (!column) return null;
+    if (selection?.kind === "row") return selection.rowId;
+    if (selection?.kind === "component") return selection.rowId;
+    return column.rows[0]?.id ?? null;
+  })();
 
   function handleAddComponent(type: ComponentType) {
-    if (!activeSectionId || !activeColumnId) return;
-    const next = addComponent(document, activeSectionId, activeColumnId, type);
+    if (!activeSectionId || !activeColumnId || !activeRowId) return;
+    const next = addComponent(document, activeSectionId, activeColumnId, type, activeRowId);
     commit(next);
-    const col = next.sections.find((s) => s.id === activeSectionId)?.columns.find((c) => c.id === activeColumnId);
-    const added = col?.components[col.components.length - 1];
+    const row = next.sections
+      .find((s) => s.id === activeSectionId)
+      ?.columns.find((c) => c.id === activeColumnId)
+      ?.rows.find((r) => r.id === activeRowId);
+    const added = row?.components[row.components.length - 1];
     if (added) {
       setSelection({
         kind: "component",
         sectionId: activeSectionId,
         columnId: activeColumnId,
+        rowId: activeRowId,
         componentId: added.id,
       });
     }
@@ -95,15 +110,16 @@ export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
   }
 
   function handleInsertReusable(reusableId: string) {
-    if (!activeSectionId || !activeColumnId) return;
+    if (!activeSectionId || !activeColumnId || !activeRowId) return;
     const block = document.reusableBlocks.find((b) => b.id === reusableId);
     if (!block) return;
     const comp = { ...block.component, id: pbId("cmp"), reusableId: block.linked ? block.id : undefined };
-    commit(insertComponent(document, activeSectionId, activeColumnId, comp));
+    commit(insertComponent(document, activeSectionId, activeColumnId, comp, activeRowId));
     setSelection({
       kind: "component",
       sectionId: activeSectionId,
       columnId: activeColumnId,
+      rowId: activeRowId,
       componentId: comp.id,
     });
   }
@@ -123,10 +139,17 @@ export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
     commit(next);
   }
 
-  const previewHtml = renderPageDocumentToHtml(document);
+  function handleUpdateColumn(sectionId: string, columnId: string, patch: { rowCount?: number; style?: PageDocument["sections"][0]["columns"][0]["style"] }) {
+    let next = document;
+    if (patch.rowCount != null) next = setColumnRowCount(next, sectionId, columnId, patch.rowCount);
+    if (patch.style != null) {
+      next = updateColumn(next, sectionId, columnId, { style: patch.style });
+    }
+    commit(next);
+  }
 
   return (
-    <div className="-mx-6 -mb-6 flex flex-col border-t bg-background" style={{ height: "calc(100vh - 11rem)" }}>
+    <div className="flex flex-col flex-1 min-h-0 bg-background">
       <PageBuilderToolbar
         canUndo={canUndo}
         canRedo={canRedo}
@@ -135,7 +158,7 @@ export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
         onUndo={undo}
         onRedo={redo}
         onBreakpoint={setBreakpoint}
-        onPreview={() => setPreviewOpen(true)}
+        previewHref={previewHref}
       />
 
       <div className="flex flex-1 min-h-0">
@@ -181,24 +204,14 @@ export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
             document={document}
             selection={selection}
             onUpdateDocument={commit}
-            onUpdateComponent={(sectionId, columnId, componentId, patch) =>
-              commit(updateComponent(document, sectionId, columnId, componentId, patch))
+            onUpdateComponent={(sectionId, columnId, rowId, componentId, patch) =>
+              commit(updateComponent(document, sectionId, columnId, rowId, componentId, patch))
             }
             onUpdateSection={handleUpdateSection}
+            onUpdateColumn={handleUpdateColumn}
           />
         </aside>
       </div>
-
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Pré-visualização — visão do aluno</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="flex-1 pr-4">
-            <div className="prose prose-sm max-w-none p-4 bg-white rounded-lg border" dangerouslySetInnerHTML={{ __html: previewHtml }} />
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

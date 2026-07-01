@@ -18,10 +18,16 @@ interface PropertiesPanelProps {
   onUpdateComponent: (
     sectionId: string,
     columnId: string,
+    rowId: string,
     componentId: string,
     patch: { props?: Record<string, unknown>; style?: BoxStyle },
   ) => void;
   onUpdateSection: (sectionId: string, patch: Partial<{ label: string; style: BoxStyle; columnCount: number }>) => void;
+  onUpdateColumn: (
+    sectionId: string,
+    columnId: string,
+    patch: Partial<{ rowCount: number; style: BoxStyle }>,
+  ) => void;
 }
 
 function SpacingEditor({
@@ -315,7 +321,7 @@ function ComponentPropsEditor({
   }
 }
 
-export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdateComponent, onUpdateSection }: PropertiesPanelProps) {
+export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdateComponent, onUpdateSection, onUpdateColumn }: PropertiesPanelProps) {
   const resolved = resolveSelection(document, selection);
 
   if (!resolved || !selection) {
@@ -362,8 +368,8 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
     );
   }
 
-  if (resolved.kind === "component" && resolved.component && resolved.section && resolved.column) {
-    const { component, section, column } = resolved;
+  if (resolved.kind === "component" && resolved.component && resolved.section && resolved.column && resolved.row) {
+    const { component, section, column, row } = resolved;
     return (
       <ScrollArea className="h-full">
         <div className="p-4 space-y-4">
@@ -373,13 +379,13 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
           </div>
           <ComponentPropsEditor
             component={component}
-            onChange={(props) => onUpdateComponent(section.id, column.id, component.id, { props })}
+            onChange={(props) => onUpdateComponent(section.id, column.id, row.id, component.id, { props })}
           />
           <Separator />
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estilo</p>
           <StyleEditor
             style={component.style}
-            onChange={(style) => onUpdateComponent(section.id, column.id, component.id, { style })}
+            onChange={(style) => onUpdateComponent(section.id, column.id, row.id, component.id, { style })}
           />
           <Separator />
           <Button
@@ -401,9 +407,69 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
     );
   }
 
+  if (resolved.kind === "row" && resolved.row && resolved.column && resolved.section) {
+    const { row, column, section } = resolved;
+    const rowIndex = column.rows.findIndex((r) => r.id === row.id) + 1;
+    return (
+      <ScrollArea className="h-full">
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Linha {rowIndex}</p>
+            <p className="text-sm text-muted-foreground">
+              Adicione componentes nesta linha pela biblioteca ou clique na coluna para dividir em mais linhas.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">{row.components.length} componente(s)</p>
+          </div>
+          <Separator />
+          <p className="text-xs text-muted-foreground">
+            Coluna com {column.rowCount} linha{column.rowCount > 1 ? "s" : ""} · Seção {section.label}
+          </p>
+        </div>
+      </ScrollArea>
+    );
+  }
+
+  if (resolved.kind === "column" && resolved.column && resolved.section) {
+    const { column, section } = resolved;
+    return (
+      <ScrollArea className="h-full">
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Coluna</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              Divida a coluna em linhas para organizar o conteúdo em faixas horizontais.
+            </p>
+            <div className="space-y-1">
+              <Label className="text-xs">Linhas</Label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map((n) => (
+                  <Button
+                    key={n}
+                    type="button"
+                    size="sm"
+                    variant={column.rowCount === n ? "default" : "outline"}
+                    className="flex-1 h-8"
+                    onClick={() => onUpdateColumn(section.id, column.id, { rowCount: n })}
+                  >
+                    {n}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Clique em uma linha no canvas para adicionar blocos nela.
+            </p>
+          </div>
+          <Separator />
+          <StyleEditor style={column.style} onChange={(style) => onUpdateColumn(section.id, column.id, { style })} />
+        </div>
+      </ScrollArea>
+    );
+  }
+
   return (
     <div className="p-4 text-sm text-muted-foreground">
-      Coluna selecionada — adicione componentes ou edite a seção pai.
+      Selecione uma seção, coluna, linha ou componente para editar as propriedades.
     </div>
   );
 }

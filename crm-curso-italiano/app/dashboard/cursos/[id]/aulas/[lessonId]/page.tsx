@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ExternalLink } from "lucide-react";
 import type { PageDocument } from "@lms-mocks/page-builder-types";
 import { useMockStore, getCourseFromStore } from "@/lib/mock-store";
 import { getPageDocumentFromBlocks } from "@/lib/page-builder/migrate";
-import { LessonEditorNav } from "@/components/lms/lesson-editor-nav";
+import { normalizeDocument } from "@/lib/page-builder/document";
+import { getLessonPreviewHref } from "@/lib/editor-routes";
+import { LessonEditorHeader } from "@/components/lms/lesson-editor-header";
 import { PageBuilder } from "@/components/page-builder/page-builder";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 export default function LessonEditorPage() {
   const params = useParams();
@@ -20,7 +18,7 @@ export default function LessonEditorPage() {
   const course = getCourseFromStore(courses, courseId);
 
   const lesson = course?.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId);
-  const [saved, setSaved] = useState(false);
+  const [, setSaved] = useState(false);
 
   const initialDocument = useMemo(() => {
     if (!lesson) return null;
@@ -28,11 +26,16 @@ export default function LessonEditorPage() {
     return getPageDocumentFromBlocks(contentBlocks);
   }, [lesson]);
 
+  const normalizedDocument = useMemo(
+    () => (initialDocument ? normalizeDocument(initialDocument) : null),
+    [initialDocument],
+  );
+
   useEffect(() => {
     setSaved(false);
   }, [lessonId]);
 
-  if (!course || !lesson || !initialDocument) return <div>Aula não encontrada</div>;
+  if (!course || !lesson || !normalizedDocument) return <div>Aula não encontrada</div>;
 
   const activeLesson = lesson;
   const existingTextBlockId = lesson.blocks.find((b) => b.type === "text")?.id;
@@ -52,36 +55,21 @@ export default function LessonEditorPage() {
   }
 
   return (
-    <div className="w-full space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Link href={`/dashboard/cursos/${courseId}`} className="text-xs text-primary hover:underline">
-            ← {course.title}
-          </Link>
-          <h1 className="text-xl font-bold mt-1">{activeLesson.title}</h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <Badge variant="secondary">{activeLesson.status === "published" ? "Publicado" : "Rascunho"}</Badge>
-            <span className="text-xs text-muted-foreground">{activeLesson.durationMinutes} min</span>
-            <Badge variant="outline" className="text-xs">
-              Page Builder
-            </Badge>
-            {saved && <Badge variant="success">Salvo!</Badge>}
-          </div>
-        </div>
-        <a
-          href={`http://localhost:3000/studio-italiano/cursos/${courseId}/aulas/${lessonId}?preview=1`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button variant="outline" size="sm">
-            <ExternalLink className="size-4 mr-1" /> Pré-visualizar
-          </Button>
-        </a>
-      </div>
-
-      <LessonEditorNav courseId={courseId} lessonId={lessonId} active="conteudo" />
-
-      <PageBuilder key={lessonId} initialDocument={initialDocument} onSave={handleSave} />
+    <div className="flex flex-col flex-1 min-h-0">
+      <LessonEditorHeader
+        courseId={courseId}
+        courseTitle={course.title}
+        lessonId={lessonId}
+        lessonTitle={activeLesson.title}
+        active="conteudo"
+        previewHref={getLessonPreviewHref(courseId, lessonId, "conteudo")}
+      />
+      <PageBuilder
+        key={lessonId}
+        initialDocument={normalizedDocument}
+        onSave={handleSave}
+        previewHref={getLessonPreviewHref(courseId, lessonId, "conteudo")}
+      />
     </div>
   );
 }

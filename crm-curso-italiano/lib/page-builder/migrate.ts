@@ -1,7 +1,7 @@
 import type { LessonBlock } from "@lms-mocks/types";
 import type { PageDocument } from "@lms-mocks/page-builder-types";
 import { renderPageDocumentToHtml } from "@lms-mocks/page-builder-html";
-import { createComponent, createEmptyDocument, createSection, pbId } from "./defaults";
+import { createComponent, createEmptyDocument, createRow, createSection, pbId } from "./defaults";
 
 /** Converte blocos legados da aula em um PageDocument */
 export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument {
@@ -24,7 +24,7 @@ export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument 
         id: pbId("sec"),
         label: "Vídeo",
         columnCount: 1,
-        columns: [{ id: pbId("col"), span: 12, components: [{ ...createComponent("video"), props: { url: c.url } }] }],
+        columns: [{ id: pbId("col"), span: 12, rowCount: 1, rows: [createRow([{ ...createComponent("video"), props: { url: c.url } }])] }],
       });
     } else if (block.type === "pdf") {
       const c = block.content as { title: string; filename: string };
@@ -36,7 +36,8 @@ export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument 
           {
             id: pbId("col"),
             span: 12,
-            components: [{ ...createComponent("file-download"), props: { title: c.title, filename: c.filename, url: "#" } }],
+            rowCount: 1,
+            rows: [createRow([{ ...createComponent("file-download"), props: { title: c.title, filename: c.filename, url: "#" } }])],
           },
         ],
       });
@@ -50,7 +51,8 @@ export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument 
           {
             id: pbId("col"),
             span: 12,
-            components: [{ ...createComponent("embed"), props: { url: c.url, embedType: "audio", title: c.title } }],
+            rowCount: 1,
+            rows: [createRow([{ ...createComponent("embed"), props: { url: c.url, embedType: "audio", title: c.title } }])],
           },
         ],
       });
@@ -64,7 +66,8 @@ export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument 
           {
             id: pbId("col"),
             span: 12,
-            components: [{ ...createComponent("button"), props: { label: c.label, url: c.url } }],
+            rowCount: 1,
+            rows: [createRow([{ ...createComponent("button"), props: { label: c.label, url: c.url } }])],
           },
         ],
       });
@@ -121,7 +124,7 @@ function htmlToSection(html: string): PageDocument["sections"][0] {
     }
   }
   const section = createSection("Conteúdo importado", 1);
-  section.columns[0].components = components.length ? components : [createComponent("paragraph")];
+  section.columns[0].rows[0].components = components.length ? components : [createComponent("paragraph")];
   return section;
 }
 
