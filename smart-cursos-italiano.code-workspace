@@ -1,10 +1,6 @@
 {
   "folders": [
     {
-      "name": "smart-cursos-italiano",
-      "path": "."
-    },
-    {
       "name": "backend-curso-italiano",
       "path": "backend-curso-italiano"
     },

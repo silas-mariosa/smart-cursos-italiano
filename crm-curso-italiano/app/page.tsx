@@ -2,14 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { useMockStore } from "@/lib/mock-store";
 
 export default function HomePage() {
+  const { persona } = useMockStore();
   const router = useRouter();
 
   useEffect(() => {
-    router.replace(api.getToken() ? "/dashboard" : "/login");
-  }, [router]);
+    router.replace(persona ? "/dashboard" : "/login");
+  }, [persona, router]);
 
   return null;
 }

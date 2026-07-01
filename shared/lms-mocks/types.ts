@@ -1,0 +1,265 @@
+export type CourseLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+export type CourseStatus = "draft" | "published";
+export type LessonStatus = "draft" | "published";
+export type BlockType = "video" | "text" | "pdf" | "audio" | "link" | "exercise";
+export type ExerciseType = "multiple_choice" | "true_false" | "fill_blank" | "written_response";
+export type ExerciseDifficulty = "easy" | "medium" | "hard";
+
+export interface ExerciseGamification {
+  difficulty: ExerciseDifficulty;
+  xpReward: number;
+  tags: string[];
+}
+export type AttemptStatus = "pending" | "graded" | "auto_graded";
+export type DemoPersonaRole = "student" | "teacher" | "admin";
+export type TenantMemberRole = "admin" | "teacher" | "student";
+
+export interface Tenant {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl: string;
+  primaryColor: string;
+  secondaryColor: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  landingFeatures: { icon: string; title: string; description: string }[];
+  testimonials: { name: string; quote: string; avatar: string }[];
+}
+
+export interface VideoBlockContent {
+  url: string;
+  durationMinutes: number;
+}
+
+import type { PageDocument } from "./page-builder-types";
+
+export interface TextBlockContent {
+  html: string;
+  /** Documento do page builder (fonte de verdade quando presente) */
+  pageDocument?: PageDocument;
+}
+
+export interface PdfBlockContent {
+  title: string;
+  filename: string;
+}
+
+export interface AudioBlockContent {
+  url: string;
+  title: string;
+}
+
+export interface LinkBlockContent {
+  url: string;
+  label: string;
+}
+
+export interface ExerciseBlockContent {
+  exerciseId: string;
+}
+
+export type BlockContent =
+  | VideoBlockContent
+  | TextBlockContent
+  | PdfBlockContent
+  | AudioBlockContent
+  | LinkBlockContent
+  | ExerciseBlockContent;
+
+export interface LessonBlock {
+  id: string;
+  type: BlockType;
+  order: number;
+  content: BlockContent;
+}
+
+export interface Lesson {
+  id: string;
+  moduleId: string;
+  title: string;
+  order: number;
+  status: LessonStatus;
+  durationMinutes: number;
+  blocks: LessonBlock[];
+}
+
+export interface CourseModule {
+  id: string;
+  courseId: string;
+  title: string;
+  order: number;
+  lessons: Lesson[];
+}
+
+export interface Course {
+  id: string;
+  tenantId: string;
+  title: string;
+  slug: string;
+  description: string;
+  level: CourseLevel;
+  status: CourseStatus;
+  thumbnailUrl: string;
+  instructorName: string;
+  modules: CourseModule[];
+}
+
+export interface MultipleChoiceConfig {
+  question: string;
+  options: { id: string; text: string }[];
+  correctOptionId: string;
+  explanation: string;
+}
+
+export interface TrueFalseConfig {
+  statement: string;
+  correct: boolean;
+  explanation: string;
+}
+
+export interface FillBlankConfig {
+  template: string;
+  blanks: { id: string; answer: string; hint?: string }[];
+  explanation: string;
+}
+
+export interface WrittenResponseConfig {
+  prompt: string;
+  maxWords?: number;
+}
+
+export type ExerciseConfig =
+  | MultipleChoiceConfig
+  | TrueFalseConfig
+  | FillBlankConfig
+  | WrittenResponseConfig;
+
+export interface Exercise {
+  id: string;
+  tenantId: string;
+  title: string;
+  type: ExerciseType;
+  config: ExerciseConfig;
+  usedInLessonIds: string[];
+  gamification?: ExerciseGamification;
+}
+
+export interface DemoPersona {
+  id: string;
+  role: DemoPersonaRole;
+  tenantRole?: TenantMemberRole;
+  name: string;
+  email: string;
+  avatar: string;
+  progressPercent?: number;
+  description: string;
+}
+
+export interface StudentEnrollment {
+  studentId: string;
+  courseId: string;
+  progressPercent: number;
+  completedLessonIds: string[];
+  lastLessonId: string | null;
+  streakDays: number;
+  enrolledAt?: string;
+}
+
+export type StudentStatus = "active" | "inactive" | "pending";
+export type StudentPlanStatus = "active" | "overdue" | "trial" | "cancelled";
+
+export interface StudentPlan {
+  name: string;
+  amount: number;
+  cycle: "monthly" | "yearly";
+  status: StudentPlanStatus;
+  nextDueDate: string;
+}
+
+export interface StudentPayment {
+  id: string;
+  date: string;
+  amount: number;
+  description: string;
+  status: "paid" | "pending" | "failed";
+}
+
+export interface StudentCertificate {
+  id: string;
+  courseId: string;
+  courseTitle: string;
+  issuedAt: string;
+  status: "issued" | "pending" | "revoked";
+}
+
+export type StudentHistoryType =
+  | "lesson"
+  | "exercise"
+  | "payment"
+  | "enrollment"
+  | "certificate"
+  | "login";
+
+export interface StudentHistoryItem {
+  id: string;
+  type: StudentHistoryType;
+  title: string;
+  description?: string;
+  timestamp: string;
+}
+
+export interface Grade {
+  id: string;
+  studentId: string;
+  exerciseId: string;
+  lessonId: string;
+  courseId: string;
+  title: string;
+  score: number;
+  maxScore: number;
+  feedback: string;
+  status: AttemptStatus;
+  submittedAt: string;
+}
+
+export interface WrittenAttempt {
+  id: string;
+  studentId: string;
+  studentName: string;
+  exerciseId: string;
+  lessonId: string;
+  courseId: string;
+  courseTitle: string;
+  lessonTitle: string;
+  prompt: string;
+  answer: string;
+  status: AttemptStatus;
+  score: number | null;
+  maxScore: number;
+  feedback: string | null;
+  submittedAt: string;
+}
+
+export interface StudentProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  memberSince: string;
+  phone?: string;
+  status?: StudentStatus;
+  plan?: StudentPlan;
+  payments?: StudentPayment[];
+  certificates?: StudentCertificate[];
+  history?: StudentHistoryItem[];
+  notes?: string;
+  skills: { name: string; percent: number }[];
+  enrollments: StudentEnrollment[];
+}
+
+export interface ActivityItem {
+  id: string;
+  message: string;
+  timestamp: string;
+}
