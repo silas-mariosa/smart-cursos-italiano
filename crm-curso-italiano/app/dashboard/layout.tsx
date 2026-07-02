@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMockStore } from "@/lib/mock-store";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PlanGate } from "@/components/subscription/plan-gate";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { persona } = useMockStore();
@@ -21,5 +22,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <DashboardShell>
+      <PlanGate>{children}</PlanGate>
+    </DashboardShell>
+  );
 }

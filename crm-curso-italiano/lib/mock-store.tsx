@@ -6,6 +6,7 @@ import type { LiveSession } from "@lms-mocks/practice-types";
 import { courses as seedCourses } from "@lms-mocks/courses";
 import { defaultTenant } from "@lms-mocks/tenant";
 import { demoPersonas, activityFeed, studentProfiles as seedStudents, createStudentProfile, createEnrollment, issueCertificate as buildCertificate } from "@lms-mocks/students";
+import { canAddStudent, getStudentLimitMessage } from "@/lib/subscription/plans";
 import { exercises as seedExercises, createDefaultGamification } from "@lms-mocks/exercises";
 import { seedLiveSessions, getStoredLiveSessions, setStoredLiveSessions } from "@lms-mocks/live-sessions";
 import {
@@ -14,6 +15,7 @@ import {
   getStoredCrmPersonaId,
   getStoredGrades,
   getStoredTenant,
+  getStoredTenantForId,
   getStoredExercises,
   setStoredAttempts,
   setStoredCourses,
@@ -25,6 +27,8 @@ import {
   setStoredStudents,
   clearStoredCrmPersonaId,
 } from "@lms-mocks/storage";
+
+export type AddStudentResult = { data: StudentProfile; error: null } | { data: null; error: string };
 
 export type CreateStudentInput = {
   name: string;
@@ -63,7 +67,7 @@ type MockStoreValue = {
   refreshAttempts: () => void;
   grades: Grade[];
   students: StudentProfile[];
-  addStudent: (input: CreateStudentInput) => StudentProfile;
+  addStudent: (input: CreateStudentInput) => AddStudentResult;
   updateStudent: (input: UpdateStudentInput) => void;
   setStudentStatus: (id: string, status: StudentStatus) => void;
   enrollStudentInCourse: (studentId: string, courseId: string) => void;
@@ -90,18 +94,22 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
   const [liveSessions, setLiveSessionsState] = useState<LiveSession[]>(seedLiveSessions);
 
   useEffect(() => {
-    setTenantState(getStoredTenant());
+    const id = getStoredCrmPersonaId();
+    let tenantToLoad = getStoredTenant();
+    if (id) {
+      const p = demoPersonas.find((x) => x.id === id);
+      if (p && (p.role === "teacher" || p.role === "admin")) {
+        setPersona(p);
+        tenantToLoad = getStoredTenantForId(p.tenantId);
+      }
+    }
+    setTenantState(tenantToLoad);
     setCoursesState(getStoredCourses());
     setExercisesState(getStoredExercises());
     setAttemptsState(getStoredAttempts());
     setGradesState(getStoredGrades());
     setStudentsState(getStoredStudents());
     setLiveSessionsState(getStoredLiveSessions());
-    const id = getStoredCrmPersonaId();
-    if (id) {
-      const p = demoPersonas.find((x) => x.id === id);
-      if (p && (p.role === "teacher" || p.role === "admin")) setPersona(p);
-    }
   }, []);
 
   useEffect(() => {
@@ -112,6 +120,9 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((personaId: string) => {
     const p = demoPersonas.find((x) => x.id === personaId);
     if (!p || (p.role !== "teacher" && p.role !== "admin")) return;
+    const tenantForPersona = getStoredTenantForId(p.tenantId);
+    setStoredTenant(tenantForPersona);
+    setTenantState(tenantForPersona);
     setStoredCrmPersonaId(personaId);
     setPersona(p);
   }, []);
@@ -126,15 +137,22 @@ export function MockStoreProvider({ children }: { children: React.ReactNode }) {
     setTenantState(t);
   }, []);
 
-  const addStudent = useCallback((input: CreateStudentInput) => {
-    const student = createStudentProfile(input);
-    setStudentsState((prev) => {
-      const next = [...prev, student];
-      setStoredStudents(next);
-      return next;
-    });
-    return student;
-  }, []);
+  const addStudent = useCallback(
+    (input: CreateStudentInput): AddStudentResult => {
+      const limitMessage = getStudentLimitMessage(tenant, students.length);
+      if (limitMessage || !canAddStudent(tenant, students.length)) {
+        return { data: null, error: limitMessage ?? "Não foi possível cadastrar o aluno." };
+      }
+      const student = createStudentProfile(input);
+      setStudentsState((prev) => {
+        const next = [...prev, student];
+        setStoredStudents(next);
+        return next;
+      });
+      return { data: student, error: null };
+    },
+    [tenant, students.length],
+  );
 
   const updateStudent = useCallback((input: UpdateStudentInput) => {
     setStudentsState((prev) => {

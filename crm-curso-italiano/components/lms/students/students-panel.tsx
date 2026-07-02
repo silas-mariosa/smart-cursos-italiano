@@ -11,6 +11,7 @@ import {
   resolveStudentStatus,
 } from "@lms-mocks/students";
 import { useMockStore } from "@/lib/mock-store";
+import { useTenantPlan } from "@/lib/subscription/use-tenant-plan";
 import { STATUS_COLORS, STATUS_LABELS, PLAN_STATUS_COLORS, PLAN_STATUS_LABELS } from "@/lib/students/constants";
 import { StudentFormDialog } from "./student-form-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,11 +36,13 @@ import {
 export function StudentsPanel() {
   const router = useRouter();
   const { students, courses, attempts, addStudent } = useMockStore();
+  const { canAddStudent, studentLimitMessage, usage, plan } = useTenantPlan();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
   const [courseFilter, setCourseFilter] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [formOpen, setFormOpen] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const stats = useMemo(() => getStudentStats(students, attempts, []), [students, attempts]);
   const filtered = useMemo(
@@ -48,8 +51,13 @@ export function StudentsPanel() {
   );
 
   function handleCreate(input: Parameters<typeof addStudent>[0]) {
-    const student = addStudent(input);
-    router.push(`/dashboard/alunos/${student.id}`);
+    setCreateError(null);
+    const result = addStudent(input);
+    if (result.error || !result.data) {
+      setCreateError(result.error ?? "Não foi possível cadastrar o aluno.");
+      return;
+    }
+    router.push(`/dashboard/alunos/${result.data.id}`);
   }
 
   return (
@@ -64,11 +72,28 @@ export function StudentsPanel() {
             Cadastre, acompanhe progresso, financeiro, certificados e histórico completo de cada aluno.
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)}>
+        <Button onClick={() => setFormOpen(true)} disabled={!canAddStudent}>
           <UserPlus className="size-4 mr-2" />
           Cadastrar aluno
         </Button>
       </div>
+
+      {(studentLimitMessage || createError) && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="py-3 text-sm text-amber-900">
+            {createError ?? studentLimitMessage}{" "}
+            <Link href="/dashboard/plano" className="underline font-medium">
+              Ver plano ({plan.label})
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {usage.max !== null && (
+        <p className="text-xs text-muted-foreground -mt-4">
+          Plano {plan.label}: {usage.current} de {usage.max} alunos cadastrados.
+        </p>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard icon={<Users className="size-5 text-primary" />} label="Total" value={stats.total} hint={`${stats.active} ativos`} />

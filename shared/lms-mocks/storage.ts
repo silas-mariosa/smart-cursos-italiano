@@ -1,12 +1,13 @@
 import type { Course, Grade, Tenant, WrittenAttempt } from "./types";
 import type { LessonPracticeSettings } from "./lesson-practice-types";
 import { courses as seedCourses } from "./courses";
-import { defaultTenant } from "./tenant";
+import { defaultTenant, getDemoTenant } from "./tenant";
 import { initialGrades, initialWrittenAttempts, studentProfiles as seedStudents } from "./students";
 import { exercises as seedExercises } from "./exercises";
 
 const STORAGE_KEYS = {
   tenant: "lms_demo_tenant",
+  tenants: "lms_demo_tenants",
   courses: "lms_demo_courses",
   attempts: "lms_demo_attempts",
   grades: "lms_demo_grades",
@@ -38,12 +39,35 @@ function writeJson<T>(key: string, value: T) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+export function getStoredTenantForId(tenantId: string): Tenant {
+  const seed = getDemoTenant(tenantId) ?? defaultTenant;
+  const map = readJson<Record<string, Partial<Tenant>>>(STORAGE_KEYS.tenants, {});
+  const overrides = map[tenantId];
+  if (!overrides) return seed;
+  return {
+    ...seed,
+    ...overrides,
+    subscription: overrides.subscription ?? seed.subscription,
+  };
+}
+
+export function setStoredTenantForId(tenant: Tenant) {
+  const map = readJson<Record<string, Partial<Tenant>>>(STORAGE_KEYS.tenants, {});
+  map[tenant.id] = tenant;
+  writeJson(STORAGE_KEYS.tenants, map);
+}
+
 export function getStoredTenant(): Tenant {
-  return readJson(STORAGE_KEYS.tenant, defaultTenant);
+  const legacy = readJson<Tenant | null>(STORAGE_KEYS.tenant, null);
+  if (legacy?.id && legacy.subscription) {
+    return getStoredTenantForId(legacy.id);
+  }
+  return getStoredTenantForId(defaultTenant.id);
 }
 
 export function setStoredTenant(tenant: Tenant) {
-  writeJson(STORAGE_KEYS.tenant, tenant);
+  setStoredTenantForId(tenant);
+  writeJson(STORAGE_KEYS.tenant, { id: tenant.id });
 }
 
 export function getStoredCourses(): Course[] {

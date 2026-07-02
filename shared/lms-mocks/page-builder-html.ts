@@ -221,9 +221,14 @@ function renderComponent(c: PageComponent): string {
   }
 }
 
-function renderColumn(col: import("./page-builder-types").PageColumn, columnCount: number): string {
+function renderColumn(
+  col: import("./page-builder-types").PageColumn,
+  columnCount: number,
+  layoutDirection: PageSection["layoutDirection"],
+): string {
   const colStyle = boxStyleToCss(col.style);
-  const flex = columnCount > 1 ? `flex:1;min-width:0` : "width:100%";
+  const isSideBySide = columnCount > 1 && layoutDirection !== "rows";
+  const flex = isSideBySide ? `flex:1;min-width:0` : "width:100%";
   const rows = col.rows?.length
     ? col.rows
     : [{ id: "legacy", components: col.components ?? [] }];
@@ -241,10 +246,14 @@ function renderColumn(col: import("./page-builder-types").PageColumn, columnCoun
 
 function renderSection(section: PageSection): string {
   const sectionStyle = boxStyleToCss(section.style);
-  const cols = section.columns.map((col) => renderColumn(col, section.columnCount)).join("");
+  const layoutDirection = section.layoutDirection ?? "columns";
+  const cols = section.columns.map((col) => renderColumn(col, section.columnCount, layoutDirection)).join("");
+  const gap = section.style?.gap ?? 16;
   const grid =
     section.columnCount > 1
-      ? `display:flex;flex-wrap:wrap;gap:${section.style?.gap ?? 16}px`
+      ? layoutDirection === "rows"
+        ? `display:flex;flex-direction:column;gap:${gap}px`
+        : `display:flex;flex-wrap:wrap;gap:${gap}px`
       : "display:block";
   const inner = `<div style="${grid}">${cols}</div>`;
   return `<section data-pb-section="${escapeHtml(section.label)}" style="${sectionStyle};${grid.includes("gap") ? "" : ""}">${wrapAlign(inner, section.style)}</section>`;

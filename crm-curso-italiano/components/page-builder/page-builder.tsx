@@ -38,9 +38,16 @@ export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilde
   const [saved, setSaved] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirstMount = useRef(true);
+  const documentRef = useRef(document);
+  documentRef.current = document;
 
   useEffect(() => {
-    reset(normalizeDocument(initialDocument));
+    const normalized = normalizeDocument(initialDocument);
+    // Evita resetar seleção/histórico quando o pai reenvia o mesmo documento após auto-save.
+    if (JSON.stringify(normalized) === JSON.stringify(normalizeDocument(documentRef.current))) {
+      return;
+    }
+    reset(normalized);
     setSelection(null);
   }, [initialDocument, reset]);
 
@@ -126,14 +133,15 @@ export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilde
 
   function handleUpdateSection(
     sectionId: string,
-    patch: Partial<{ label: string; style: PageDocument["sections"][0]["style"]; columnCount: number }>,
+    patch: Partial<{ label: string; style: PageDocument["sections"][0]["style"]; columnCount: number; layoutDirection: "columns" | "rows" }>,
   ) {
     let next = document;
     if (patch.columnCount != null) next = setSectionColumnCount(next, sectionId, patch.columnCount);
-    if (patch.label != null || patch.style != null) {
+    if (patch.label != null || patch.style != null || patch.layoutDirection != null) {
       next = updateSection(next, sectionId, {
         ...(patch.label != null ? { label: patch.label } : {}),
         ...(patch.style != null ? { style: patch.style } : {}),
+        ...(patch.layoutDirection != null ? { layoutDirection: patch.layoutDirection } : {}),
       });
     }
     commit(next);
@@ -183,7 +191,7 @@ export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilde
               />
             </TabsContent>
             <TabsContent value="structure" className="flex-1 mt-0 overflow-hidden">
-              <StructurePanel document={document} selection={selection} onSelect={setSelection} />
+              <StructurePanel document={document} selection={selection} onSelect={setSelection} onChange={commit} />
             </TabsContent>
           </Tabs>
         </aside>

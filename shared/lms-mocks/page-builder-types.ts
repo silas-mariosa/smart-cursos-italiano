@@ -96,6 +96,8 @@ export interface PageSection {
   id: string;
   label: string;
   columnCount: number;
+  /** Disposição das áreas quando columnCount > 1. Padrão: colunas lado a lado. */
+  layoutDirection?: "columns" | "rows";
   columns: PageColumn[];
   style?: BoxStyle;
   responsive?: ResponsiveStyle;

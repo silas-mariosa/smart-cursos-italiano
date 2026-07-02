@@ -26,3 +26,5 @@ export function Button({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>) {
   return <button className={cn(buttonVariants({ variant, size, className }))} {...props} />;
 }
+
+export { buttonVariants };

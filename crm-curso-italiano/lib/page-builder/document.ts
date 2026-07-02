@@ -18,7 +18,8 @@ function clone<T>(v: T): T {
 
 export function getColumnRows(col: PageColumn): PageRow[] {
   if (col.rows?.length) return col.rows;
-  return [createRow(col.components ?? [])];
+  // ID estável para colunas legadas sem `rows`, evitando falha ao remover/mover componentes.
+  return [{ id: `${col.id}-row-0`, components: col.components ?? [] }];
 }
 
 export function normalizeColumn(col: PageColumn): PageColumn {
@@ -275,6 +276,50 @@ export function moveComponent(
   if (!component) return doc;
   const without = removeComponent(doc, from.sectionId, from.columnId, from.rowId, from.componentId);
   return insertComponent(without, to.sectionId, to.columnId, component, to.rowId, to.index);
+}
+
+export function moveComponentToTarget(
+  doc: PageDocument,
+  from: { sectionId: string; columnId: string; rowId: string; componentId: string },
+  to: {
+    sectionId: string;
+    columnId: string;
+    rowId: string;
+    targetComponentId?: string;
+    after?: boolean;
+  },
+): PageDocument {
+  const sameRow =
+    from.sectionId === to.sectionId && from.columnId === to.columnId && from.rowId === to.rowId;
+
+  if (sameRow && to.targetComponentId) {
+    return reorderComponentInRow(
+      doc,
+      from.sectionId,
+      from.columnId,
+      from.rowId,
+      from.componentId,
+      to.targetComponentId,
+      to.after ?? false,
+    );
+  }
+
+  const targetCol = doc.sections.find((s) => s.id === to.sectionId)?.columns.find((c) => c.id === to.columnId);
+  const targetRow = targetCol ? getColumnRows(normalizeColumn(targetCol)).find((r) => r.id === to.rowId) : undefined;
+  if (!targetRow) return doc;
+
+  let index = targetRow.components.length;
+  if (to.targetComponentId) {
+    const ti = targetRow.components.findIndex((c) => c.id === to.targetComponentId);
+    if (ti >= 0) index = to.after ? ti + 1 : ti;
+  }
+
+  return moveComponent(doc, from, {
+    sectionId: to.sectionId,
+    columnId: to.columnId,
+    rowId: to.rowId,
+    index,
+  });
 }
 
 export function reorderComponentInRow(

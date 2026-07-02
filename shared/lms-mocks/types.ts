@@ -14,6 +14,35 @@ export type AttemptStatus = "pending" | "graded" | "auto_graded";
 export type DemoPersonaRole = "student" | "teacher" | "admin";
 export type TenantMemberRole = "admin" | "teacher" | "student";
 
+/** Módulos do painel CRM controlados pelo plano de negócio da escola */
+export type CrmModule =
+  | "overview"
+  | "courses"
+  | "live"
+  | "practice"
+  | "exerciseBank"
+  | "corrections"
+  | "students"
+  | "branding";
+
+export type BusinessPlanTier = "basic" | "basic_plus" | "pro" | "enterprise" | "custom";
+
+export type TenantSubscriptionStatus = "active" | "trial" | "expired";
+
+export interface TenantSubscription {
+  tier: BusinessPlanTier;
+  /** Sobrescreve o limite do catálogo (ex.: plano personalizado) */
+  maxStudents?: number | null;
+  maxCourses?: number | null;
+  /** Sobrescreve módulos do catálogo (ex.: plano personalizado) */
+  modules?: CrmModule[];
+  status: TenantSubscriptionStatus;
+  startedAt: string;
+  nextBillingDate: string;
+  /** Nome comercial quando tier === "custom" */
+  customLabel?: string;
+}
+
 export interface Tenant {
   id: string;
   slug: string;
@@ -25,6 +54,7 @@ export interface Tenant {
   heroSubtitle: string;
   landingFeatures: { icon: string; title: string; description: string }[];
   testimonials: { name: string; quote: string; avatar: string }[];
+  subscription: TenantSubscription;
 }
 
 export interface VideoBlockContent {
@@ -148,6 +178,7 @@ export interface Exercise {
 export interface DemoPersona {
   id: string;
   role: DemoPersonaRole;
+  tenantId: string;
   tenantRole?: TenantMemberRole;
   name: string;
   email: string;

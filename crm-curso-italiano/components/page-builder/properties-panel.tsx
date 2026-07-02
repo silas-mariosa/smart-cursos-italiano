@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { BoxStyle, PageComponent, PageDocument, SelectionTarget, Spacing } from "@lms-mocks/page-builder-types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import { getCatalogLabel } from "@/lib/page-builder/catalog";
 import { resolveSelection } from "@/lib/page-builder/document";
 import { saveReusableBlock } from "@/lib/page-builder/document";
+import {
+  buildShadowFromIntensity,
+  getUniformSpacing,
+  loadStyleEditorMode,
+  normalizeFontWeight,
+  parseShadowIntensity,
+  saveStyleEditorMode,
+  uniformSpacing,
+  type StyleEditorMode,
+} from "@/lib/page-builder/style-editor-helpers";
 
 interface PropertiesPanelProps {
   document: PageDocument;
@@ -22,7 +34,7 @@ interface PropertiesPanelProps {
     componentId: string,
     patch: { props?: Record<string, unknown>; style?: BoxStyle },
   ) => void;
-  onUpdateSection: (sectionId: string, patch: Partial<{ label: string; style: BoxStyle; columnCount: number }>) => void;
+  onUpdateSection: (sectionId: string, patch: Partial<{ label: string; style: BoxStyle; columnCount: number; layoutDirection: "columns" | "rows" }>) => void;
   onUpdateColumn: (
     sectionId: string,
     columnId: string,
@@ -60,34 +72,131 @@ function SpacingEditor({
   );
 }
 
-function StyleEditor({ style, onChange }: { style?: BoxStyle; onChange: (s: BoxStyle) => void }) {
+function StyleModeToggle({ mode, onChange }: { mode: StyleEditorMode; onChange: (mode: StyleEditorMode) => void }) {
+  return (
+    <div className="flex rounded-md border bg-muted/30 p-0.5">
+      <Button
+        type="button"
+        size="sm"
+        variant={mode === "basic" ? "default" : "ghost"}
+        className="h-7 flex-1 text-xs"
+        onClick={() => onChange("basic")}
+      >
+        Básico
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={mode === "professional" ? "default" : "ghost"}
+        className="h-7 flex-1 text-xs"
+        onClick={() => onChange("professional")}
+      >
+        Profissional
+      </Button>
+    </div>
+  );
+}
+
+function StyleEditor({
+  style,
+  mode,
+  onModeChange,
+  onChange,
+}: {
+  style?: BoxStyle;
+  mode: StyleEditorMode;
+  onModeChange: (mode: StyleEditorMode) => void;
+  onChange: (s: BoxStyle) => void;
+}) {
   const s = style ?? {};
+
   return (
     <div className="space-y-3">
-      <SpacingEditor label="Padding (px)" value={s.padding} onChange={(padding) => onChange({ ...s, padding })} />
-      <SpacingEditor label="Margin (px)" value={s.margin} onChange={(margin) => onChange({ ...s, margin })} />
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Gap (px)</Label>
-          <Input type="number" className="h-8 text-xs" value={s.gap ?? ""} onChange={(e) => onChange({ ...s, gap: Number(e.target.value) || undefined })} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Border radius</Label>
-          <Input type="number" className="h-8 text-xs" value={s.borderRadius ?? ""} onChange={(e) => onChange({ ...s, borderRadius: Number(e.target.value) || undefined })} />
-        </div>
-      </div>
+      <StyleModeToggle mode={mode} onChange={onModeChange} />
+      <p className="text-[11px] text-muted-foreground">
+        {mode === "basic"
+          ? "Use os sliders para ajustes rápidos. Ative o modo profissional para editar valores manualmente."
+          : "Edite cada valor com precisão. Volte ao modo básico para usar sliders."}
+      </p>
+
+      {mode === "basic" ? (
+        <>
+          <Slider
+            label="Padding (px)"
+            value={getUniformSpacing(s.padding)}
+            min={0}
+            max={80}
+            unit="px"
+            onChange={(value) => onChange({ ...s, padding: uniformSpacing(value) })}
+          />
+          <Slider
+            label="Margin (px)"
+            value={getUniformSpacing(s.margin)}
+            min={0}
+            max={80}
+            unit="px"
+            onChange={(value) => onChange({ ...s, margin: uniformSpacing(value) })}
+          />
+          <Slider
+            label="Gap (px)"
+            value={s.gap ?? 0}
+            min={0}
+            max={64}
+            unit="px"
+            onChange={(value) => onChange({ ...s, gap: value || undefined })}
+          />
+          <Slider
+            label="Border radius"
+            value={s.borderRadius ?? 0}
+            min={0}
+            max={48}
+            unit="px"
+            onChange={(value) => onChange({ ...s, borderRadius: value || undefined })}
+          />
+        </>
+      ) : (
+        <>
+          <SpacingEditor label="Padding (px)" value={s.padding} onChange={(padding) => onChange({ ...s, padding })} />
+          <SpacingEditor label="Margin (px)" value={s.margin} onChange={(margin) => onChange({ ...s, margin })} />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Gap (px)</Label>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                value={s.gap ?? ""}
+                onChange={(e) => onChange({ ...s, gap: Number(e.target.value) || undefined })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Border radius</Label>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                value={s.borderRadius ?? ""}
+                onChange={(e) => onChange({ ...s, borderRadius: Number(e.target.value) || undefined })}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="space-y-1">
         <Label className="text-xs">Cor de fundo</Label>
         <Input type="color" className="h-8 w-full" value={s.backgroundColor ?? "#ffffff"} onChange={(e) => onChange({ ...s, backgroundColor: e.target.value })} />
       </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Gradiente CSS</Label>
-        <Input className="h-8 text-xs" placeholder="linear-gradient(...)" value={s.backgroundGradient ?? ""} onChange={(e) => onChange({ ...s, backgroundGradient: e.target.value || undefined })} />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Imagem de fundo (URL)</Label>
-        <Input className="h-8 text-xs" value={s.backgroundImage ?? ""} onChange={(e) => onChange({ ...s, backgroundImage: e.target.value || undefined })} />
-      </div>
+      {mode === "professional" && (
+        <>
+          <div className="space-y-1">
+            <Label className="text-xs">Gradiente CSS</Label>
+            <Input className="h-8 text-xs" placeholder="linear-gradient(...)" value={s.backgroundGradient ?? ""} onChange={(e) => onChange({ ...s, backgroundGradient: e.target.value || undefined })} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Imagem de fundo (URL)</Label>
+            <Input className="h-8 text-xs" value={s.backgroundImage ?? ""} onChange={(e) => onChange({ ...s, backgroundImage: e.target.value || undefined })} />
+          </div>
+        </>
+      )}
       <div className="space-y-1">
         <Label className="text-xs">Cor do texto</Label>
         <Input type="color" className="h-8 w-full" value={s.color ?? "#000000"} onChange={(e) => onChange({ ...s, color: e.target.value })} />
@@ -119,20 +228,57 @@ function StyleEditor({ style, onChange }: { style?: BoxStyle; onChange: (s: BoxS
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <Label className="text-xs">Tamanho fonte</Label>
-          <Input type="number" className="h-8 text-xs" value={s.typography?.fontSize ?? ""} onChange={(e) => onChange({ ...s, typography: { ...s.typography, fontSize: Number(e.target.value) || undefined } })} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Peso fonte</Label>
-          <Input type="number" className="h-8 text-xs" value={s.typography?.fontWeight ?? ""} onChange={(e) => onChange({ ...s, typography: { ...s.typography, fontWeight: Number(e.target.value) || undefined } })} />
-        </div>
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Sombra CSS</Label>
-        <Input className="h-8 text-xs" placeholder="0 4px 6px rgba(0,0,0,0.1)" value={s.boxShadow ?? ""} onChange={(e) => onChange({ ...s, boxShadow: e.target.value || undefined })} />
-      </div>
+      {mode === "basic" ? (
+        <>
+          <Slider
+            label="Peso fonte"
+            value={normalizeFontWeight(s.typography?.fontWeight)}
+            min={300}
+            max={900}
+            step={100}
+            onChange={(value) => onChange({ ...s, typography: { ...s.typography, fontWeight: value } })}
+          />
+          <Slider
+            label="Sombra"
+            value={parseShadowIntensity(s.boxShadow)}
+            min={0}
+            max={100}
+            onChange={(value) => onChange({ ...s, boxShadow: buildShadowFromIntensity(value) })}
+          />
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Tamanho fonte</Label>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                value={s.typography?.fontSize ?? ""}
+                onChange={(e) => onChange({ ...s, typography: { ...s.typography, fontSize: Number(e.target.value) || undefined } })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Peso fonte</Label>
+              <Input
+                type="number"
+                className="h-8 text-xs"
+                value={s.typography?.fontWeight ?? ""}
+                onChange={(e) => onChange({ ...s, typography: { ...s.typography, fontWeight: Number(e.target.value) || undefined } })}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Sombra CSS</Label>
+            <Input
+              className="h-8 text-xs"
+              placeholder="0 4px 6px rgba(0,0,0,0.1)"
+              value={s.boxShadow ?? ""}
+              onChange={(e) => onChange({ ...s, boxShadow: e.target.value || undefined })}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -323,6 +469,16 @@ function ComponentPropsEditor({
 
 export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdateComponent, onUpdateSection, onUpdateColumn }: PropertiesPanelProps) {
   const resolved = resolveSelection(document, selection);
+  const [styleMode, setStyleMode] = useState<StyleEditorMode>("basic");
+
+  useEffect(() => {
+    setStyleMode(loadStyleEditorMode());
+  }, []);
+
+  function handleStyleModeChange(mode: StyleEditorMode) {
+    setStyleMode(mode);
+    saveStyleEditorMode(mode);
+  }
 
   if (!resolved || !selection) {
     return (
@@ -353,16 +509,56 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
                     size="sm"
                     variant={section.columnCount === n ? "default" : "outline"}
                     className="flex-1 h-8"
-                    onClick={() => onUpdateSection(section.id, { columnCount: n })}
+                    onClick={() =>
+                      onUpdateSection(section.id, {
+                        columnCount: n,
+                        ...(n === 1 ? { layoutDirection: "columns" as const } : {}),
+                      })
+                    }
                   >
                     {n}
                   </Button>
                 ))}
               </div>
             </div>
+            {section.columnCount > 1 && (
+              <div className="space-y-1 mt-2">
+                <Label className="text-xs">Disposição</Label>
+                <div className="flex rounded-md border bg-muted/30 p-0.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={(section.layoutDirection ?? "columns") === "columns" ? "default" : "ghost"}
+                    className="h-7 flex-1 text-xs"
+                    onClick={() => onUpdateSection(section.id, { layoutDirection: "columns" })}
+                  >
+                    Colunas
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={section.layoutDirection === "rows" ? "default" : "ghost"}
+                    className="h-7 flex-1 text-xs"
+                    onClick={() => onUpdateSection(section.id, { layoutDirection: "rows" })}
+                  >
+                    Linhas
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {section.layoutDirection === "rows"
+                    ? "As áreas ficam empilhadas verticalmente."
+                    : "As áreas ficam lado a lado na horizontal."}
+                </p>
+              </div>
+            )}
           </div>
           <Separator />
-          <StyleEditor style={section.style} onChange={(style) => onUpdateSection(section.id, { style })} />
+          <StyleEditor
+            style={section.style}
+            mode={styleMode}
+            onModeChange={handleStyleModeChange}
+            onChange={(style) => onUpdateSection(section.id, { style })}
+          />
         </div>
       </ScrollArea>
     );
@@ -385,6 +581,8 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estilo</p>
           <StyleEditor
             style={component.style}
+            mode={styleMode}
+            onModeChange={handleStyleModeChange}
             onChange={(style) => onUpdateComponent(section.id, column.id, row.id, component.id, { style })}
           />
           <Separator />
@@ -461,7 +659,12 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
             </p>
           </div>
           <Separator />
-          <StyleEditor style={column.style} onChange={(style) => onUpdateColumn(section.id, column.id, { style })} />
+          <StyleEditor
+            style={column.style}
+            mode={styleMode}
+            onModeChange={handleStyleModeChange}
+            onChange={(style) => onUpdateColumn(section.id, column.id, { style })}
+          />
         </div>
       </ScrollArea>
     );
