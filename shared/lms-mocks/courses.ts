@@ -1,13 +1,14 @@
 import type { Course } from "./types";
+import { normalizeCourses } from "./course-slugs";
 
-export const courses: Course[] = [
+const seedCoursesRaw: Course[] = [
   {
     id: "course-a1",
     tenantId: "tenant-studio-italiano",
     title: "Italiano A1 — Primeiros passos",
     slug: "italiano-a1",
     description:
-      "Aprenda saudações, números e situações do dia a dia em italiano. Curso ideal para iniciantes absolutos.",
+      "Aprenda saudações, gramática básica, números e situações do dia a dia em italiano. Curso ideal para iniciantes absolutos.",
     level: "A1",
     status: "published",
     thumbnailUrl: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=400&h=240&fit=crop",
@@ -16,13 +17,16 @@ export const courses: Course[] = [
       {
         id: "mod-a1-1",
         courseId: "course-a1",
-        title: "Ciao! Saudações",
+        title: "Primeiros passos",
+        slug: "primeiros-passos",
+        description: "Fundamentos do idioma italiano e introdução à cultura.",
         order: 1,
         lessons: [
           {
             id: "lesson-a1-1",
             moduleId: "mod-a1-1",
-            title: "Presentazioni",
+            title: "Base do idioma italiano",
+            slug: "base-do-idioma-italiano",
             order: 1,
             status: "published",
             durationMinutes: 12,
@@ -62,7 +66,8 @@ export const courses: Course[] = [
           {
             id: "lesson-a1-2",
             moduleId: "mod-a1-1",
-            title: "Come sta?",
+            title: "Cultura italiana",
+            slug: "cultura-italiana",
             order: 2,
             status: "published",
             durationMinutes: 15,
@@ -96,13 +101,76 @@ export const courses: Course[] = [
       {
         id: "mod-a1-2",
         courseId: "course-a1",
-        title: "Al ristorante",
+        title: "Gramática italiana",
+        slug: "gramatica-italiana",
+        description: "Conceitos gramaticais essenciais para construir frases corretamente.",
         order: 2,
         lessons: [
           {
-            id: "lesson-a1-3",
+            id: "lesson-a1-g1",
             moduleId: "mod-a1-2",
+            title: "Gênero no italiano",
+            slug: "genero-no-italiano",
+            order: 1,
+            status: "published",
+            durationMinutes: 14,
+            blocks: [
+              {
+                id: "block-a1-g1-1",
+                type: "text",
+                order: 1,
+                content: {
+                  html: `<h3>Artigos e gênero</h3>
+<p>Em italiano, os substantivos têm gênero masculino ou feminino:</p>
+<ul>
+<li><strong>il</strong> libro (o livro) — masculino</li>
+<li><strong>la</strong> casa (a casa) — feminino</li>
+</ul>
+<p>O artigo deve concordar com o gênero da palavra.</p>`,
+                },
+              },
+            ],
+          },
+          {
+            id: "lesson-a1-g2",
+            moduleId: "mod-a1-2",
+            title: "Plural italiano",
+            slug: "plural-italiano",
+            order: 2,
+            status: "published",
+            durationMinutes: 14,
+            blocks: [
+              {
+                id: "block-a1-g2-1",
+                type: "text",
+                order: 1,
+                content: {
+                  html: `<h3>Formando o plural</h3>
+<p>Regras básicas do plural em italiano:</p>
+<ul>
+<li>Masculino em -o → -i: <strong>libro → libri</strong></li>
+<li>Feminino em -a → -e: <strong>casa → case</strong></li>
+<li>Masculino/feminino em -e → -i: <strong>studente → studenti</strong></li>
+</ul>`,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "mod-a1-3",
+        courseId: "course-a1",
+        title: "Al ristorante",
+        slug: "al-ristorante",
+        description: "Situações práticas para pedir comida e pagar a conta.",
+        order: 3,
+        lessons: [
+          {
+            id: "lesson-a1-3",
+            moduleId: "mod-a1-3",
             title: "Ordinare al ristorante",
+            slug: "ordinare-al-ristorante",
             order: 1,
             status: "published",
             durationMinutes: 18,
@@ -152,8 +220,9 @@ export const courses: Course[] = [
           },
           {
             id: "lesson-a1-4",
-            moduleId: "mod-a1-2",
+            moduleId: "mod-a1-3",
             title: "Al conto — pagando a conta",
+            slug: "al-conto-pagando-a-conta",
             order: 2,
             status: "published",
             durationMinutes: 14,
@@ -174,15 +243,18 @@ export const courses: Course[] = [
         ],
       },
       {
-        id: "mod-a1-3",
+        id: "mod-a1-4",
         courseId: "course-a1",
         title: "I numeri",
-        order: 3,
+        slug: "i-numeri",
+        description: "Números, quantidades e uso no dia a dia.",
+        order: 4,
         lessons: [
           {
             id: "lesson-a1-5",
-            moduleId: "mod-a1-3",
+            moduleId: "mod-a1-4",
             title: "Numeri da 1 a 100",
+            slug: "numeri-da-1-a-100",
             order: 1,
             status: "published",
             durationMinutes: 16,
@@ -223,12 +295,15 @@ export const courses: Course[] = [
         id: "mod-a2-1",
         courseId: "course-a2",
         title: "In viaggio",
+        slug: "in-viaggio",
+        description: "Vocabulário e frases para viagens.",
         order: 1,
         lessons: [
           {
             id: "lesson-a2-1",
             moduleId: "mod-a2-1",
             title: "All'aeroporto",
+            slug: "all-aeroporto",
             order: 1,
             status: "draft",
             durationMinutes: 20,
@@ -250,12 +325,14 @@ export const courses: Course[] = [
   },
 ];
 
-export function getCourseById(id: string): Course | undefined {
-  return courses.find((c) => c.id === id);
+export const courses: Course[] = normalizeCourses(seedCoursesRaw);
+
+export function getCourseById(id: string, source: Course[] = courses): Course | undefined {
+  return source.find((c) => c.id === id);
 }
 
-export function getLessonById(courseId: string, lessonId: string) {
-  const course = getCourseById(courseId);
+export function getLessonById(courseId: string, lessonId: string, source: Course[] = courses) {
+  const course = getCourseById(courseId, source);
   if (!course) return undefined;
   for (const mod of course.modules) {
     const lesson = mod.lessons.find((l) => l.id === lessonId);
@@ -265,7 +342,9 @@ export function getLessonById(courseId: string, lessonId: string) {
 }
 
 export function getAllLessons(course: Course) {
-  return course.modules.flatMap((m) => m.lessons.map((l) => ({ ...l, moduleTitle: m.title, moduleId: m.id })));
+  return course.modules.flatMap((m) =>
+    m.lessons.map((l) => ({ ...l, moduleTitle: m.title, moduleSlug: m.slug, moduleId: m.id })),
+  );
 }
 
 export function getNextLesson(course: Course, currentLessonId: string) {
@@ -284,12 +363,9 @@ export function countLessons(course: Course) {
   return course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
 }
 
-export function getLessonFromCourses(courses: Course[], courseId: string, lessonId: string) {
-  const course = courses.find((c) => c.id === courseId);
-  if (!course) return undefined;
-  for (const mod of course.modules) {
-    const lesson = mod.lessons.find((l) => l.id === lessonId);
-    if (lesson) return { course, module: mod, lesson };
-  }
-  return undefined;
+export function getLessonFromCourses(coursesList: Course[], courseId: string, lessonId: string) {
+  return getLessonById(courseId, lessonId, coursesList);
 }
+
+/** @deprecated Use seed from courses export */
+export const seedCourses = courses;

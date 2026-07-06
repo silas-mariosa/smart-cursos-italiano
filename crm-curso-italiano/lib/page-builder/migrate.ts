@@ -74,10 +74,6 @@ export function lessonBlocksToPageDocument(blocks: LessonBlock[]): PageDocument 
     }
   }
 
-  if (doc.sections.length === 0) {
-    doc.sections = createEmptyDocument().sections;
-  }
-
   return doc;
 }
 

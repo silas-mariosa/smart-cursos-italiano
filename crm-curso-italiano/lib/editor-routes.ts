@@ -1,24 +1,64 @@
-const LESSON_EDITOR_PATTERN = /^\/dashboard\/cursos\/[^/]+\/aulas\/[^/]+(\/praticar)?$/;
-const LESSON_PREVIEW_PATTERN = /^\/dashboard\/cursos\/[^/]+\/aulas\/[^/]+(\/praticar)?\/pre-visualizar$/;
+import {
+  getCrmCourseHref,
+  getCrmLessonEditHref,
+  getCrmLessonHref,
+  getCrmLessonPreviewHref,
+  getCrmModuleHref,
+  isCourseEditorShellPath,
+  isLessonEditorPath,
+  type CrmLessonEditorMode,
+} from "@lms-mocks/course-routes";
+import type { Course } from "@lms-mocks/types";
+import { getLessonByIdInCourses } from "@lms-mocks/course-slugs";
 
-export function isLessonEditorPath(pathname: string): boolean {
-  return LESSON_EDITOR_PATTERN.test(pathname) || LESSON_PREVIEW_PATTERN.test(pathname);
-}
+export {
+  getCrmCourseHref,
+  getCrmModuleHref,
+  getCrmLessonHref,
+  getCrmLessonEditHref,
+  getCrmLessonPreviewHref,
+  isCourseEditorShellPath,
+  isLessonEditorPath,
+};
+export type { CrmLessonEditorMode };
 
 export function getLessonEditorHref(
   courseId: string,
-  lessonId: string,
-  mode: "conteudo" | "praticar" = "conteudo",
+  moduleSlug: string,
+  lessonSlug: string,
+  mode: CrmLessonEditorMode = "conteudo",
 ): string {
-  const base = `/dashboard/cursos/${courseId}/aulas/${lessonId}`;
-  return mode === "praticar" ? `${base}/praticar` : base;
+  return getCrmLessonEditHref(courseId, moduleSlug, lessonSlug, mode);
 }
 
 export function getLessonPreviewHref(
   courseId: string,
-  lessonId: string,
-  mode: "conteudo" | "praticar" = "conteudo",
+  moduleSlug: string,
+  lessonSlug: string,
+  mode: CrmLessonEditorMode = "conteudo",
 ): string {
-  const base = `/dashboard/cursos/${courseId}/aulas/${lessonId}`;
-  return mode === "praticar" ? `${base}/praticar/pre-visualizar` : `${base}/pre-visualizar`;
+  return getCrmLessonPreviewHref(courseId, moduleSlug, lessonSlug, mode);
+}
+
+/** Resolve slug-based editor URL from legacy lesson id. */
+export function getLessonEditorHrefFromLessonId(
+  courses: Course[],
+  courseId: string,
+  lessonId: string,
+  mode: CrmLessonEditorMode = "conteudo",
+): string | null {
+  const ctx = getLessonByIdInCourses(courses, courseId, lessonId);
+  if (!ctx) return null;
+  return getCrmLessonEditHref(courseId, ctx.module.slug, ctx.lesson.slug, mode);
+}
+
+export function getLessonPreviewHrefFromLessonId(
+  courses: Course[],
+  courseId: string,
+  lessonId: string,
+  mode: CrmLessonEditorMode = "conteudo",
+): string | null {
+  const ctx = getLessonByIdInCourses(courses, courseId, lessonId);
+  if (!ctx) return null;
+  return getCrmLessonPreviewHref(courseId, ctx.module.slug, ctx.lesson.slug, mode);
 }

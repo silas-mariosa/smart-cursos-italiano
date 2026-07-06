@@ -5,8 +5,11 @@ import { useParams } from "next/navigation";
 import { BookOpen, Flame, PlayCircle, Video, Dumbbell } from "lucide-react";
 import { useDemoCourses } from "@/lib/hooks/useDemoCourses";
 import { getLessonFromCourses } from "@lms-mocks/courses";
+import { getStudentLessonHrefFromLessonId } from "@lms-mocks/course-routes";
 import { useActiveLiveSession } from "@/lib/hooks/useLiveSessions";
 import { useDemoStudent } from "@/lib/context/DemoStudentContext";
+import { useStoredStudentProfile } from "@/lib/hooks/useStoredStudentProfile";
+import { canStudentAccessCourse } from "@/lib/students/access";
 import { CoursePreviewCard } from "@/components/lms/course-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,11 +20,25 @@ export default function DashboardPage() {
   const params = useParams();
   const tenantSlug = params.tenant as string;
   const { persona, progress, getCourseProgress, grades, refreshGrades } = useDemoStudent();
+  const profile = useStoredStudentProfile(persona?.id);
 
   const courses = useDemoCourses();
-  const enrolledCourses = courses.filter((c) => c.status === "published" || c.id === "course-a2");
+  const enrolledCourses = profile
+    ? courses.filter(
+        (c) =>
+          profile.enrollments.some((e) => e.courseId === c.id) &&
+          canStudentAccessCourse(profile, c.id),
+      )
+    : courses.filter((c) => c.status === "published");
   const continueLessonId = progress.lastLessonId ?? "lesson-a1-1";
-  const continueData = getLessonFromCourses(courses, "course-a1", continueLessonId);
+  const continueCourseId = "course-a1";
+  const continueData = getLessonFromCourses(courses, continueCourseId, continueLessonId);
+  const continueHref = getStudentLessonHrefFromLessonId(
+    tenantSlug,
+    courses,
+    continueCourseId,
+    continueLessonId,
+  );
   const studentGrades = grades.filter((g) => g.studentId === persona?.id);
   const liveSession = useActiveLiveSession();
 
@@ -76,9 +93,11 @@ export default function DashboardPage() {
                 <Progress value={getCourseProgress("course-a1")} />
               </div>
             </div>
-            <Link href={`/${tenantSlug}/cursos/course-a1/aulas/${continueLessonId}`}>
+            {continueHref && (
+            <Link href={continueHref}>
               <Button>Continuar aula →</Button>
             </Link>
+            )}
           </CardContent>
         </Card>
       )}

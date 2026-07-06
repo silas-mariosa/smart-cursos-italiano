@@ -1,7 +1,24 @@
 "use client";
 
-import type { BoxStyle, PageComponent } from "@lms-mocks/page-builder-types";
+import type { BoxStyle, PageComponent, TableCellData } from "@lms-mocks/page-builder-types";
+import {
+  HEADING_LEVEL_DEFAULTS,
+  headingTag,
+  headingTypographyStyle,
+  normalizeHeadingLevel,
+} from "@lms-mocks/heading-styles";
+import {
+  AlertTriangle,
+  BookOpen,
+  HelpCircle,
+  Lightbulb,
+  MessageSquare,
+  Star,
+  Volume2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ActivityPreviewContent } from "@/components/page-builder/editors/activity-editor";
+import { useMockStore } from "@/lib/mock-store";
 
 function spacingStyle(s?: BoxStyle["padding"]): React.CSSProperties | undefined {
   if (!s) return undefined;
@@ -13,7 +30,7 @@ function marginStyle(s?: BoxStyle["margin"]): React.CSSProperties | undefined {
   return { marginTop: s.top, marginRight: s.right, marginBottom: s.bottom, marginLeft: s.left };
 }
 
-function boxStyleToReact(style?: BoxStyle): React.CSSProperties {
+function boxStyleToReact(style?: BoxStyle, options?: { excludeTypography?: boolean }): React.CSSProperties {
   if (!style) return {};
   return {
     ...spacingStyle(style.padding),
@@ -23,30 +40,102 @@ function boxStyleToReact(style?: BoxStyle): React.CSSProperties {
     backgroundImage: style.backgroundGradient ?? (style.backgroundImage ? `url(${style.backgroundImage})` : undefined),
     backgroundSize: style.backgroundImage ? "cover" : undefined,
     backgroundPosition: style.backgroundImage ? "center" : undefined,
-    color: style.color,
+    color: options?.excludeTypography ? undefined : style.color,
     borderColor: style.borderColor,
     borderWidth: style.borderWidth,
     borderStyle: style.borderWidth ? "solid" : undefined,
     borderRadius: style.borderRadius,
     boxShadow: style.boxShadow,
-    fontFamily: style.typography?.fontFamily,
-    fontSize: style.typography?.fontSize,
-    fontWeight: style.typography?.fontWeight,
-    lineHeight: style.typography?.lineHeight,
-    letterSpacing: style.typography?.letterSpacing,
-    textAlign: style.typography?.textAlign,
+    fontFamily: options?.excludeTypography ? undefined : style.typography?.fontFamily,
+    fontSize: options?.excludeTypography ? undefined : style.typography?.fontSize,
+    fontWeight: options?.excludeTypography ? undefined : style.typography?.fontWeight,
+    lineHeight: options?.excludeTypography ? undefined : style.typography?.lineHeight,
+    letterSpacing: options?.excludeTypography ? undefined : style.typography?.letterSpacing,
+    textAlign: options?.excludeTypography ? undefined : style.typography?.textAlign,
   };
 }
 
+function normalizeTableRows(raw: unknown): TableCellData[][] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    if (!Array.isArray(row)) return [{ content: "" }];
+    return row.map((cell) => (typeof cell === "string" ? { content: cell } : (cell as TableCellData)));
+  });
+}
+
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  "volume-2": Volume2,
+  "alert-triangle": AlertTriangle,
+  lightbulb: Lightbulb,
+  "book-open": BookOpen,
+  "message-square": MessageSquare,
+  "help-circle": HelpCircle,
+  star: Star,
+};
+
+function IconBadgePreview({ props }: { props: Record<string, unknown> }) {
+  const Icon = ICON_MAP[String(props.icon ?? "volume-2")] ?? Volume2;
+  const variant = String(props.variant ?? "info");
+  const colors: Record<string, string> = {
+    info: "bg-blue-600",
+    warning: "bg-amber-500",
+    tip: "bg-emerald-600",
+  };
+  return (
+    <div className="flex gap-3 items-start">
+      <div className="flex flex-col items-center shrink-0 w-16">
+        <div className={cn("size-10 rounded-lg flex items-center justify-center text-white", colors[variant] ?? colors.info)}>
+          <Icon className="size-5" />
+        </div>
+        <p className="text-xs font-semibold text-blue-700 mt-1 text-center">
+          {String(props.label ?? "")}
+          {props.subtitle ? <span className="text-blue-400"> {String(props.subtitle)}</span> : null}
+        </p>
+      </div>
+      {props.content ? (
+        <div className="border-l-2 border-blue-200 pl-3 text-xs text-muted-foreground flex-1">{String(props.content)}</div>
+      ) : null}
+    </div>
+  );
+}
+
+function ActivityPreviewBlock({ props }: { props: Record<string, unknown> }) {
+  const { exercises } = useMockStore();
+  const bankExercise = exercises.find((e) => e.id === props.exerciseId);
+  return (
+    <div className="space-y-2">
+      {props.title ? <p className="font-semibold text-sm">{String(props.title)}</p> : null}
+      {props.instructions ? <p className="text-sm text-muted-foreground">{String(props.instructions)}</p> : null}
+      <ActivityPreviewContent props={props} bankExercise={bankExercise} />
+    </div>
+  );
+}
+
 export function ComponentPreview({ component, className }: { component: PageComponent; className?: string }) {
-  const style = boxStyleToReact(component.style);
+  const isHeading = component.type === "heading";
+  const style = boxStyleToReact(component.style, { excludeTypography: isHeading });
 
   const inner = (() => {
     switch (component.type) {
       case "heading": {
-        const level = (component.props.level as number) ?? 2;
-        const Tag = level <= 2 ? "h2" : level === 3 ? "h3" : "h4";
-        return <Tag className="font-bold">{String(component.props.text ?? "")}</Tag>;
+        const level = normalizeHeadingLevel(component.props.level);
+        const Tag = headingTag(level);
+        const defaults = HEADING_LEVEL_DEFAULTS[level];
+        const hs = headingTypographyStyle(level, component.style?.typography);
+        return (
+          <Tag
+            className={defaults.tailwindClass}
+            style={{
+              fontSize: hs.fontSize,
+              fontWeight: hs.fontWeight,
+              lineHeight: hs.lineHeight,
+              color: component.style?.color,
+              textAlign: component.style?.typography?.textAlign,
+            }}
+          >
+            {String(component.props.text ?? "")}
+          </Tag>
+        );
       }
       case "paragraph":
         return <p className="leading-relaxed" dangerouslySetInnerHTML={{ __html: String(component.props.text ?? "") }} />;
@@ -124,7 +213,7 @@ export function ComponentPreview({ component, className }: { component: PageComp
       }
       case "table": {
         const headers = (component.props.headers as string[]) ?? [];
-        const rows = (component.props.rows as string[][]) ?? [];
+        const rows = normalizeTableRows(component.props.rows);
         return (
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
@@ -141,7 +230,13 @@ export function ComponentPreview({ component, className }: { component: PageComp
                 {rows.map((row, ri) => (
                   <tr key={ri}>
                     {row.map((cell, ci) => (
-                      <td key={ci} className="border p-2" dangerouslySetInnerHTML={{ __html: cell }} />
+                      <td
+                        key={ci}
+                        className="border p-2"
+                        rowSpan={cell.rowspan}
+                        colSpan={cell.colspan}
+                        dangerouslySetInnerHTML={{ __html: cell.content }}
+                      />
                     ))}
                   </tr>
                 ))}
@@ -150,6 +245,97 @@ export function ComponentPreview({ component, className }: { component: PageComp
           </div>
         );
       }
+      case "icon-badge":
+        return <IconBadgePreview props={component.props} />;
+      case "example-grid": {
+        const cols = Number(component.props.columns ?? 2);
+        const items = (component.props.items as { left: string; right?: string }[]) ?? [];
+        return (
+          <div className={cn("grid gap-2", cols === 1 ? "grid-cols-1" : cols === 3 ? "grid-cols-3" : "grid-cols-2")}>
+            {items.map((item, i) => (
+              <div key={i} className="bg-blue-50 rounded-lg px-3 py-2 text-sm">
+                <span dangerouslySetInnerHTML={{ __html: item.left }} />
+                {item.right ? (
+                  <>
+                    {" "}
+                    <span className="text-muted-foreground italic" dangerouslySetInnerHTML={{ __html: item.right }} />
+                  </>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case "dialogue-box": {
+        const lines = (component.props.lines as { speaker: string; text: string }[]) ?? [];
+        return (
+          <div className="space-y-2">
+            {component.props.context ? (
+              <p className="text-sm text-muted-foreground italic">{String(component.props.context)}</p>
+            ) : null}
+            <div className="bg-blue-50 rounded-xl p-4 space-y-2">
+              {lines.map((line, i) => (
+                <p key={i} className="text-sm">
+                  <strong>{line.speaker}:</strong> {line.text}
+                </p>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "vocabulary-box": {
+        const pairs = (component.props.pairs as { term: string; translation: string }[]) ?? [];
+        const bg = String(component.props.backgroundColor ?? "#6b21a8");
+        return (
+          <div className="rounded-xl p-4 text-white" style={{ backgroundColor: bg }}>
+            <p className="font-bold text-sm mb-3">{String(component.props.title ?? "Vocabulário")}</p>
+            <div className="space-y-1.5">
+              {pairs.map((p, i) => (
+                <div key={i} className="grid grid-cols-2 gap-2 text-sm">
+                  <span className="font-medium">{p.term}</span>
+                  <span className="opacity-75">{p.translation}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "writing-lines": {
+        const lineCount = Number(component.props.lineCount ?? 2);
+        return (
+          <div className="space-y-2">
+            {component.props.prompt ? (
+              <p className="text-sm font-medium">{String(component.props.prompt)}</p>
+            ) : null}
+            {Array.from({ length: lineCount }).map((_, i) => (
+              <div key={i} className="border-b border-dashed border-muted-foreground/40 h-8" />
+            ))}
+          </div>
+        );
+      }
+      case "infobox": {
+        const sections = (component.props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [];
+        return (
+          <div className="border-2 border-purple-800 rounded-lg overflow-hidden">
+            <div className="bg-purple-800 text-white px-3 py-1.5 font-semibold text-sm">{String(component.props.title ?? "Infobox")}</div>
+            <div className="p-3 space-y-3">
+              {sections.map((sec, si) => (
+                <div key={si}>
+                  {sec.subtitle ? <p className="text-xs font-semibold text-purple-800 mb-1">{sec.subtitle}</p> : null}
+                  {sec.rows.map((row, ri) => (
+                    <div key={ri} className="grid grid-cols-2 gap-2 text-sm py-0.5">
+                      <span>{row.left}</span>
+                      <span className="text-muted-foreground text-right">{row.right}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case "activity":
+        return <ActivityPreviewBlock props={component.props} />;
       case "separator":
       case "divider":
         return <hr className="border-muted-foreground/20 my-4" />;

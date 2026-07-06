@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, PlayCircle, Dumbbell } from "lucide-react";
 import type { Course } from "@lms-mocks/types";
 import { lessonHasPractice } from "@lms-mocks/lesson-utils";
+import { getCrmCoursePreviewHref, getCrmLessonPreviewPlayerHref, getCrmLessonPreviewPracticeHref } from "@lms-mocks/course-routes";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ interface CoursePreviewSidebarProps {
 }
 
 export function CoursePreviewSidebar({ course, courseId, currentLessonId }: CoursePreviewSidebarProps) {
-  const base = `/dashboard/cursos/${courseId}/visualizar`;
+  const base = getCrmCoursePreviewHref(courseId);
 
   return (
     <div className="flex h-full flex-col border-r bg-muted/20">
@@ -42,7 +43,7 @@ export function CoursePreviewSidebar({ course, courseId, currentLessonId }: Cour
                   return (
                     <li key={lesson.id} className="space-y-0.5">
                       <Link
-                        href={`${base}/aulas/${lesson.id}`}
+                        href={getCrmLessonPreviewPlayerHref(courseId, mod.slug, lesson.slug)}
                         className={cn(
                           "flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors",
                           active ? "bg-primary text-primary-foreground" : "hover:bg-accent",
@@ -58,7 +59,7 @@ export function CoursePreviewSidebar({ course, courseId, currentLessonId }: Cour
                       </Link>
                       {hasPractice && (
                         <Link
-                          href={`${base}/aulas/${lesson.id}/praticar`}
+                          href={getCrmLessonPreviewPracticeHref(courseId, mod.slug, lesson.slug)}
                           className={cn(
                             "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs ml-6 transition-colors",
                             active ? "text-primary-foreground/80" : "text-muted-foreground hover:text-primary",

@@ -114,6 +114,7 @@ export const demoTenants: Tenant[] = [
         "corrections",
         "live",
         "exerciseBank",
+        "aiGeneration",
       ],
     }),
     ...sharedLanding,

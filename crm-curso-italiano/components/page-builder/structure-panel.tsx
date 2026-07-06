@@ -175,6 +175,13 @@ export function StructurePanel({ document, selection, onSelect, onChange }: Stru
           Arraste pelo ícone ⋮⋮ para mover. Use a seta para expandir ou recolher.
         </p>
 
+        {document.sections.length === 0 && (
+          <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center">
+            <p className="text-xs text-muted-foreground">Nenhuma seção na página.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Adicione uma seção no canvas ou aplique um layout.</p>
+          </div>
+        )}
+
         {document.sections.map((section) => {
           const secKey = sectionKey(section.id);
           const secOpen = isOpen(secKey);

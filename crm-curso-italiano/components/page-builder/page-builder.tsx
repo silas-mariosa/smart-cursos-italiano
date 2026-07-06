@@ -28,10 +28,9 @@ import type { SavedLayout } from "@lms-mocks/page-builder-types";
 interface PageBuilderProps {
   initialDocument: PageDocument;
   onSave: (doc: PageDocument, html: string) => void;
-  previewHref?: string;
 }
 
-export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilderProps) {
+export function PageBuilder({ initialDocument, onSave }: PageBuilderProps) {
   const { document, setDocument, undo, redo, canUndo, canRedo, reset } = usePageHistory(normalizeDocument(initialDocument));
   const [selection, setSelection] = useState<SelectionTarget>(null);
   const [breakpoint, setBreakpoint] = useState<Breakpoint>("desktop");
@@ -166,7 +165,6 @@ export function PageBuilder({ initialDocument, onSave, previewHref }: PageBuilde
         onUndo={undo}
         onRedo={redo}
         onBreakpoint={setBreakpoint}
-        previewHref={previewHref}
       />
 
       <div className="flex flex-1 min-h-0">

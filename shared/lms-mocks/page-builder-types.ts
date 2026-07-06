@@ -62,7 +62,23 @@ export type ComponentType =
   | "divider"
   | "code"
   | "file-download"
-  | "embed";
+  | "embed"
+  | "icon-badge"
+  | "example-grid"
+  | "dialogue-box"
+  | "vocabulary-box"
+  | "writing-lines"
+  | "infobox"
+  | "activity";
+
+/** Célula de tabela com suporte opcional a mesclagem */
+export interface TableCellData {
+  content: string;
+  rowspan?: number;
+  colspan?: number;
+}
+
+export type ActivitySource = "bank" | "ai" | "manual";
 
 export interface PageComponent {
   id: string;

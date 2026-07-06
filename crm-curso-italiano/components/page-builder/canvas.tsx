@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, GripVertical, Plus, Trash2 } from "lucide-react";
+import { Copy, GripVertical, LayoutTemplate, Layers, Plus, Trash2 } from "lucide-react";
 import type { ComponentType, PageDocument, SelectionTarget } from "@lms-mocks/page-builder-types";
 import { ComponentPreview, SectionPreviewStyle } from "@/components/page-builder/component-preview";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { getCatalogLabel } from "@/lib/page-builder/catalog";
 import { cn } from "@/lib/utils";
 import {
   addSection,
+  countDocumentComponents,
   duplicateComponent,
   duplicateSection,
   moveComponentToTarget,
@@ -139,7 +140,7 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
       if (selection?.kind === "component" && selection.componentId === componentId) {
         onSelect(null);
       }
-    } else if (document.sections.length > 1) {
+    } else {
       onChange(removeSection(document, deleteTarget.sectionId));
       if (selection?.sectionId === deleteTarget.sectionId) {
         onSelect(null);
@@ -157,7 +158,12 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
   const deleteDescription =
     deleteTarget?.kind === "component"
       ? "Este bloco será removido da página. Essa ação pode ser desfeita com Ctrl+Z."
-      : `A seção "${deleteTarget?.kind === "section" ? deleteTarget.label : ""}" e todo o conteúdo dentro dela serão removidos. Essa ação pode ser desfeita com Ctrl+Z.`;
+      : document.sections.length === 1
+        ? `A seção "${deleteTarget?.kind === "section" ? deleteTarget.label : ""}" será removida e a página ficará vazia. Você poderá adicionar uma nova seção ou aplicar um layout. Essa ação pode ser desfeita com Ctrl+Z.`
+        : `A seção "${deleteTarget?.kind === "section" ? deleteTarget.label : ""}" e todo o conteúdo dentro dela serão removidos. Essa ação pode ser desfeita com Ctrl+Z.`;
+
+  const isEmpty = document.sections.length === 0;
+  const hasNoComponents = !isEmpty && countDocumentComponents(document) === 0;
 
   return (
     <div className="flex-1 overflow-auto bg-muted/20 p-6 flex justify-center min-h-0">
@@ -166,6 +172,34 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
         style={{ maxWidth: BREAKPOINT_WIDTH[breakpoint] }}
       >
         <div className="space-y-4">
+          {isEmpty && (
+            <div className="rounded-xl border-2 border-dashed border-muted-foreground/25 bg-background p-10 text-center">
+              <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Layers className="size-7" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Página vazia</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                Comece adicionando uma seção ou escolha um layout pronto na biblioteca à esquerda (aba Layouts).
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Button type="button" onClick={() => onChange(addSection(document))}>
+                  <Plus className="size-4 mr-1" />
+                  Adicionar seção
+                </Button>
+                <Button type="button" variant="outline" onClick={() => onChange(addSection(document, "Nova seção", 2))}>
+                  <LayoutTemplate className="size-4 mr-1" />
+                  Seção com 2 colunas
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {hasNoComponents && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Esta página ainda não tem blocos de conteúdo. Selecione uma coluna ou linha e adicione componentes pela biblioteca.
+            </div>
+          )}
+
           {document.sections.map((section) => {
             const sectionSelected = selection?.kind === "section" && selection.sectionId === section.id;
             return (
@@ -236,9 +270,7 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
                       className="h-7 w-7 p-0"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (document.sections.length > 1) {
-                          setDeleteTarget({ kind: "section", sectionId: section.id, label: section.label });
-                        }
+                        setDeleteTarget({ kind: "section", sectionId: section.id, label: section.label });
                       }}
                     >
                       <Trash2 className="size-3.5 text-red-500" />
@@ -460,14 +492,16 @@ export function PageBuilderCanvas({ document, selection, breakpoint, onSelect, o
             );
           })}
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full border-dashed"
-            onClick={() => onChange(addSection(document))}
-          >
-            <Plus className="size-4 mr-1" /> Nova seção
-          </Button>
+          {!isEmpty && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-dashed"
+              onClick={() => onChange(addSection(document))}
+            >
+              <Plus className="size-4 mr-1" /> Nova seção
+            </Button>
+          )}
         </div>
       </div>
 

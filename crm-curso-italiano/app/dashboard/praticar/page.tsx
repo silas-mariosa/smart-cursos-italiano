@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import {
   BookOpen,
   Dumbbell,
@@ -43,19 +42,17 @@ const MODULE_GUIDES = [
 export default function PracticeHubCrmPage() {
   const { courses, exercises, attempts } = useMockStore();
   const pendingCorrections = attempts.filter((a) => a.status === "pending").length;
-  const [lessonFilter, setLessonFilter] = useState<"all" | "with-practice" | "without-practice">("all");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Dumbbell className="size-7 text-primary" />
             Central de prática
           </h1>
-          <p className="text-muted-foreground mt-1 max-w-2xl">
-            Gerencie quizzes, flashcards e simulador em um só lugar. Configure a gamificação no banco
-            de questões e vincule conteúdo por aula — separado do material principal.
+          <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
+            Busque, filtre e gerencie quizzes, flashcards e simulador por curso ou aula.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -81,20 +78,6 @@ export default function PracticeHubCrmPage() {
         pendingCorrections={pendingCorrections}
       />
 
-      <div className="grid md:grid-cols-3 gap-3">
-        {MODULE_GUIDES.map(({ icon: Icon, title, color, description }) => (
-          <Card key={title} className={color}>
-            <CardContent className="py-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon className="size-5" />
-                <p className="font-semibold text-sm">{title}</p>
-              </div>
-              <p className="text-xs opacity-90">{description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       <Tabs defaultValue="aulas">
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="aulas" className="gap-1.5">
@@ -111,42 +94,29 @@ export default function PracticeHubCrmPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="aulas" className="space-y-4 mt-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              Configure prática em cada aula — quizzes, flashcards e simulador de conversação.
-            </p>
-            <div className="flex gap-1 flex-wrap">
-              {(
-                [
-                  ["all", "Todas"],
-                  ["with-practice", "Com prática"],
-                  ["without-practice", "Sem prática"],
-                ] as const
-              ).map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setLessonFilter(value)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                    lessonFilter === value
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "hover:bg-accent"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <LessonPracticeList courses={courses} filter={lessonFilter} />
+        <TabsContent value="aulas" className="mt-4">
+          <LessonPracticeList courses={courses} />
         </TabsContent>
 
-        <TabsContent value="banco" className="mt-6">
+        <TabsContent value="banco" className="mt-4">
           <ExerciseBankPanel variant="compact" showHeader={false} />
         </TabsContent>
 
-        <TabsContent value="guia" className="mt-6 space-y-4">
+        <TabsContent value="guia" className="mt-4 space-y-4">
+          <div className="grid md:grid-cols-3 gap-3">
+            {MODULE_GUIDES.map(({ icon: Icon, title, color, description }) => (
+              <Card key={title} className={color}>
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="size-5" />
+                    <p className="font-semibold text-sm">{title}</p>
+                  </div>
+                  <p className="text-xs opacity-90">{description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
           <Card>
             <CardContent className="py-6 space-y-6">
               <section className="space-y-2">

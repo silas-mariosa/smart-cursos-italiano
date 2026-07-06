@@ -8,4 +8,5 @@ export * from "./practice-types";
 export * from "./flashcards";
 export * from "./simulator";
 export * from "./live-sessions";
+export * from "./student-groups";
 export * from "./lesson-utils";

@@ -5,10 +5,20 @@ import type {
   StudentEnrollment,
   StudentHistoryItem,
   StudentPayment,
+  StudentPlan,
   StudentProfile,
   StudentStatus,
   WrittenAttempt,
 } from "./types";
+import { planFromTemplate, seedPlanTemplates } from "./student-plan-templates";
+import type { StudentPlanTemplate } from "./types";
+
+function planWithTemplateFeatures(plan: StudentPlan, templateId?: string): StudentPlan {
+  if (!templateId) return plan;
+  const tpl = seedPlanTemplates.find((t) => t.id === templateId);
+  if (!tpl) return plan;
+  return { ...plan, features: planFromTemplate(tpl).features };
+}
 
 const DEFAULT_SKILLS = [
   { name: "Grammar", percent: 0 },
@@ -35,13 +45,18 @@ export const studentProfiles: StudentProfile[] = [
     avatar: "AS",
     memberSince: "2026-03-01",
     status: "active",
-    plan: {
-      name: "Plano Mensal A1+A2",
-      amount: 149.9,
-      cycle: "monthly",
-      status: "active",
-      nextDueDate: "2026-07-15",
-    },
+    accessSource: "manual",
+    planTemplateId: "tpl-studio-premium",
+    plan: planWithTemplateFeatures(
+      {
+        name: "Premium",
+        amount: 249.9,
+        cycle: "monthly",
+        status: "active",
+        nextDueDate: "2026-07-15",
+      },
+      "tpl-studio-premium",
+    ),
     payments: [
       {
         id: "pay-ana-1",
@@ -95,6 +110,7 @@ export const studentProfiles: StudentProfile[] = [
         lastLessonId: "lesson-a1-3",
         streakDays: 3,
         enrolledAt: "2026-03-01",
+        fromTemplateId: "tpl-studio-mensal",
       },
       {
         studentId: "persona-ana",
@@ -104,6 +120,7 @@ export const studentProfiles: StudentProfile[] = [
         lastLessonId: null,
         streakDays: 3,
         enrolledAt: "2026-05-01",
+        fromTemplateId: "tpl-studio-mensal",
       },
     ],
   },
@@ -115,13 +132,18 @@ export const studentProfiles: StudentProfile[] = [
     avatar: "LM",
     memberSince: "2026-01-15",
     status: "active",
-    plan: {
-      name: "Plano Anual Premium",
-      amount: 1199.0,
-      cycle: "yearly",
-      status: "active",
-      nextDueDate: "2027-01-15",
-    },
+    accessSource: "manual",
+    planTemplateId: "tpl-studio-anual",
+    plan: planWithTemplateFeatures(
+      {
+        name: "Plano Anual Premium",
+        amount: 1199.0,
+        cycle: "yearly",
+        status: "active",
+        nextDueDate: "2027-01-15",
+      },
+      "tpl-studio-anual",
+    ),
     payments: [
       {
         id: "pay-lucas-1",
@@ -170,6 +192,7 @@ export const studentProfiles: StudentProfile[] = [
         lastLessonId: "lesson-a1-5",
         streakDays: 7,
         enrolledAt: "2026-01-15",
+        fromTemplateId: "tpl-studio-anual",
       },
     ],
   },
@@ -179,15 +202,22 @@ export const studentProfiles: StudentProfile[] = [
     email: "maria@demo.com",
     phone: "+55 31 97654-3210",
     avatar: "MC",
-    memberSince: "2026-05-10",
-    status: "active",
-    plan: {
-      name: "Trial 7 dias",
-      amount: 0,
-      cycle: "monthly",
-      status: "trial",
-      nextDueDate: "2026-07-07",
-    },
+    memberSince: "2026-07-01",
+    status: "pending",
+    accessSource: "kiwify",
+    provisionalPassword: "Maria2026",
+    welcomeEmailSentAt: "2026-07-01T12:00:00Z",
+    planTemplateId: "tpl-studio-semestral",
+    plan: planWithTemplateFeatures(
+      {
+        name: "Semestral A1 (Kiwify)",
+        amount: 799.0,
+        cycle: "semester",
+        status: "trial",
+        nextDueDate: "2027-01-01",
+      },
+      "tpl-studio-semestral",
+    ),
     payments: [],
     certificates: [],
     history: [
@@ -218,7 +248,8 @@ export const studentProfiles: StudentProfile[] = [
         completedLessonIds: ["lesson-a1-1"],
         lastLessonId: "lesson-a1-2",
         streakDays: 1,
-        enrolledAt: "2026-05-10",
+        enrolledAt: "2026-07-01",
+        fromTemplateId: "tpl-studio-semestral",
       },
     ],
   },
@@ -249,9 +280,28 @@ export function createStudentProfile(input: {
   email: string;
   phone?: string;
   courseIds?: string[];
+  plan?: StudentPlan;
+  planTemplateId?: string;
+  template?: StudentPlanTemplate;
+  accessSource?: StudentProfile["accessSource"];
 }): StudentProfile {
   const id = `persona-${Date.now()}`;
-  const enrollments = (input.courseIds ?? []).map((courseId) => createEnrollment(id, courseId));
+  const template = input.template;
+  const courseIds = input.courseIds ?? template?.courseIds ?? [];
+  const enrollments = courseIds.map((courseId) => ({
+    ...createEnrollment(id, courseId),
+    fromTemplateId: template?.id,
+  }));
+  const plan =
+    input.plan ??
+    (template ? planFromTemplate(template) : {
+      name: "Trial 7 dias",
+      amount: 0,
+      cycle: "monthly" as const,
+      status: "trial" as const,
+      nextDueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    });
+
   return {
     id,
     name: input.name.trim(),
@@ -260,13 +310,9 @@ export function createStudentProfile(input: {
     avatar: avatarFromName(input.name),
     memberSince: new Date().toISOString().slice(0, 10),
     status: "pending",
-    plan: {
-      name: "Trial 7 dias",
-      amount: 0,
-      cycle: "monthly",
-      status: "trial",
-      nextDueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    },
+    accessSource: input.accessSource ?? "manual",
+    planTemplateId: input.planTemplateId ?? template?.id,
+    plan,
     payments: [],
     certificates: [],
     history: [

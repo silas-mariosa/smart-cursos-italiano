@@ -44,7 +44,7 @@ export const demoPersonas: DemoPersona[] = [
     email: "maria@demo.com",
     avatar: "MC",
     progressPercent: 12,
-    description: "Começando — 12% do curso A1",
+    description: "Compra via Kiwify — senha provisória na demo",
   },
   {
     id: "persona-marco",

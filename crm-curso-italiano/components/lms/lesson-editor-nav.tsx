@@ -2,20 +2,35 @@
 
 import Link from "next/link";
 import { BookOpen, Dumbbell } from "lucide-react";
+import { getCrmLessonEditHref } from "@lms-mocks/course-routes";
 import { cn } from "@/lib/utils";
 
 type LessonEditorNavProps = {
   courseId: string;
-  lessonId: string;
+  moduleSlug: string;
+  lessonSlug: string;
   active: "conteudo" | "praticar";
 };
 
-export function LessonEditorNav({ courseId, lessonId, active }: LessonEditorNavProps) {
-  const base = `/dashboard/cursos/${courseId}/aulas/${lessonId}`;
-
+export function LessonEditorNav({
+  courseId,
+  moduleSlug,
+  lessonSlug,
+  active,
+}: LessonEditorNavProps) {
   const tabs = [
-    { id: "conteudo" as const, label: "Conteúdo", icon: BookOpen, href: base },
-    { id: "praticar" as const, label: "Praticar", icon: Dumbbell, href: `${base}/praticar` },
+    {
+      id: "conteudo" as const,
+      label: "Conteúdo",
+      icon: BookOpen,
+      href: getCrmLessonEditHref(courseId, moduleSlug, lessonSlug),
+    },
+    {
+      id: "praticar" as const,
+      label: "Praticar",
+      icon: Dumbbell,
+      href: getCrmLessonEditHref(courseId, moduleSlug, lessonSlug, "praticar"),
+    },
   ];
 
   return (

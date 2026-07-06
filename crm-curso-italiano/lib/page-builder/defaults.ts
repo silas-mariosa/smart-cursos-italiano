@@ -1,4 +1,5 @@
 import type { ComponentType, PageComponent, PageColumn, PageDocument, PageRow, PageSection } from "@lms-mocks/page-builder-types";
+import { createEmptyExerciseConfig } from "@lms-mocks/exercises";
 
 export function pbId(prefix = "pb"): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -20,7 +21,7 @@ export function createColumn(span: number, components: PageComponent[] = []): Pa
 export function createEmptyDocument(): PageDocument {
   return {
     version: 1,
-    sections: [createSection("Seção 1", 1)],
+    sections: [],
     savedLayouts: [],
     reusableBlocks: [],
   };
@@ -67,7 +68,10 @@ export function createComponent(type: ComponentType): PageComponent {
       return {
         id,
         type,
-        props: { headers: ["Italiano", "Tradução"], rows: [["Ciao", "Olá"], ["Grazie", "Obrigado"]] },
+        props: {
+          headers: ["Italiano", "Tradução"],
+          rows: [[{ content: "Ciao" }, { content: "Olá" }], [{ content: "Grazie" }, { content: "Obrigado" }]],
+        },
       };
     case "separator":
     case "divider":
@@ -124,5 +128,96 @@ export function createComponent(type: ComponentType): PageComponent {
       return { id, type, props: { title: "Material de apoio", filename: "aula.pdf", url: "#" } };
     case "embed":
       return { id, type, props: { url: "https://www.youtube.com/embed/0WPFwid_kEk", embedType: "youtube" } };
+    case "icon-badge":
+      return {
+        id,
+        type,
+        props: {
+          icon: "volume-2",
+          label: "Áudio",
+          subtitle: "",
+          variant: "info",
+          content: "",
+        },
+      };
+    case "example-grid":
+      return {
+        id,
+        type,
+        props: {
+          columns: 2,
+          items: [
+            { left: "I <strong>am working</strong>", right: "eu trabalho" },
+            { left: "You <strong>are working</strong>", right: "tu trabalhas" },
+            { left: "He <strong>is working</strong>", right: "ele trabalha" },
+          ],
+        },
+      };
+    case "dialogue-box":
+      return {
+        id,
+        type,
+        props: {
+          context: "Mary e Katherine estão conversando sobre um colega.",
+          lines: [
+            { speaker: "Mary", text: "He was very attractive, wasn't he?" },
+            { speaker: "Katherine", text: "Yes, he was. And very charming too." },
+          ],
+        },
+      };
+    case "vocabulary-box":
+      return {
+        id,
+        type,
+        props: {
+          title: "Vocabulário",
+          pairs: [
+            { term: "inflexible", translation: "inflexível" },
+            { term: "job interview", translation: "entrevista de trabalho" },
+            { term: "attractive", translation: "atraente" },
+          ],
+          backgroundColor: "#6b21a8",
+        },
+      };
+    case "writing-lines":
+      return {
+        id,
+        type,
+        props: {
+          prompt: "1. Mary's — hair — blond — shirt — red",
+          lineCount: 2,
+          showNumbers: true,
+        },
+      };
+    case "infobox":
+      return {
+        id,
+        type,
+        props: {
+          title: "Infobox",
+          sections: [
+            {
+              subtitle: "Medidas",
+              rows: [
+                { left: "1 inch (in.)", right: "25,4 mm" },
+                { left: "1 foot (ft.)", right: "30,48 cm" },
+              ],
+            },
+          ],
+        },
+      };
+    case "activity":
+      return {
+        id,
+        type,
+        props: {
+          title: "Exercício 1:",
+          instructions: "Escolha a alternativa correta.",
+          source: "manual",
+          manualType: "multiple_choice",
+          manualTitle: "Nova atividade",
+          manualConfig: createEmptyExerciseConfig("multiple_choice"),
+        },
+      };
   }
 }

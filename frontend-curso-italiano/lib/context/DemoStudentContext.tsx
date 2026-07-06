@@ -1,12 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { DemoPersona, Grade, WrittenAttempt } from "@lms-mocks/types";
+import type { DemoPersona, Grade, StudentPlanFeature, StudentProfile, WrittenAttempt } from "@lms-mocks/types";
 import {
   demoPersonas,
   getStudentProfile,
   initialGrades,
 } from "@lms-mocks/students";
+import { canStudentAccessFeature } from "@lms-mocks/student-plan-access";
+import { getStoredStudents } from "@lms-mocks/storage";
 import {
   getStoredAttempts,
   getStoredGrades,
@@ -23,6 +25,8 @@ import { countLessons, getCourseById } from "@lms-mocks/courses";
 
 type DemoStudentContextValue = {
   persona: DemoPersona | null;
+  studentProfile: StudentProfile | null;
+  canAccessFeature: (feature: StudentPlanFeature) => boolean;
   login: (personaId: string) => void;
   logout: () => void;
   progress: StoredProgress;
@@ -43,6 +47,10 @@ function defaultProgressForPersona(personaId: string): StoredProgress {
     completedLessonIds: enrollment?.completedLessonIds ?? [],
     lastLessonId: enrollment?.lastLessonId ?? null,
   };
+}
+
+function resolveStudentProfile(personaId: string): StudentProfile | undefined {
+  return getStoredStudents().find((s) => s.id === personaId) ?? getStudentProfile(personaId);
 }
 
 export function DemoStudentProvider({ children }: { children: React.ReactNode }) {
@@ -126,9 +134,24 @@ export function DemoStudentProvider({ children }: { children: React.ReactNode })
     [],
   );
 
+  const studentProfile = useMemo(
+    () => (persona ? resolveStudentProfile(persona.id) ?? null : null),
+    [persona],
+  );
+
+  const canAccessFeatureFn = useCallback(
+    (feature: StudentPlanFeature) => {
+      if (!studentProfile) return false;
+      return canStudentAccessFeature(studentProfile, feature);
+    },
+    [studentProfile],
+  );
+
   const value = useMemo(
     () => ({
       persona,
+      studentProfile,
+      canAccessFeature: canAccessFeatureFn,
       login,
       logout,
       progress,
@@ -139,7 +162,7 @@ export function DemoStudentProvider({ children }: { children: React.ReactNode })
       submitWrittenAttempt,
       refreshGrades,
     }),
-    [persona, login, logout, progress, completeLesson, getCourseProgress, grades, submitWrittenAttempt, refreshGrades],
+    [persona, studentProfile, canAccessFeatureFn, login, logout, progress, completeLesson, getCourseProgress, grades, submitWrittenAttempt, refreshGrades],
   );
 
   return <DemoStudentContext.Provider value={value}>{children}</DemoStudentContext.Provider>;

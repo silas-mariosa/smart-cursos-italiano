@@ -21,9 +21,41 @@ export type CrmModule =
   | "live"
   | "practice"
   | "exerciseBank"
+  | "mockExams"
   | "corrections"
   | "students"
-  | "branding";
+  | "branding"
+  | "aiGeneration"
+  | "support";
+
+export type StudentPlanFeature =
+  | "courses"
+  | "liveParticipation"
+  | "liveRecordings"
+  | "exerciseBank"
+  | "mockExams";
+
+export type LiveClassType = "group" | "individual";
+
+export interface StudentPlanLiveConfig {
+  enabled: boolean;
+  classTypes: LiveClassType[];
+  /** aulas ao vivo incluídas por ciclo; null = ilimitado */
+  sessionsPerCycle: number | null;
+}
+
+export interface StudentPlanFeatures {
+  live: StudentPlanLiveConfig;
+  access: Record<Exclude<StudentPlanFeature, "courses">, boolean>;
+}
+
+export interface TenantAiConfig {
+  enabled: boolean;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  lastValidatedAt: string | null;
+}
 
 export type BusinessPlanTier = "basic" | "basic_plus" | "pro" | "enterprise" | "custom";
 
@@ -55,6 +87,7 @@ export interface Tenant {
   landingFeatures: { icon: string; title: string; description: string }[];
   testimonials: { name: string; quote: string; avatar: string }[];
   subscription: TenantSubscription;
+  integrations?: TenantIntegration[];
 }
 
 export interface VideoBlockContent {
@@ -108,6 +141,7 @@ export interface Lesson {
   id: string;
   moduleId: string;
   title: string;
+  slug: string;
   order: number;
   status: LessonStatus;
   durationMinutes: number;
@@ -118,6 +152,8 @@ export interface CourseModule {
   id: string;
   courseId: string;
   title: string;
+  slug: string;
+  description?: string;
   order: number;
   lessons: Lesson[];
 }
@@ -195,17 +231,36 @@ export interface StudentEnrollment {
   lastLessonId: string | null;
   streakDays: number;
   enrolledAt?: string;
+  /** Curso veio de um template de plano (vs. matrícula manual) */
+  fromTemplateId?: string;
 }
 
 export type StudentStatus = "active" | "inactive" | "pending";
 export type StudentPlanStatus = "active" | "overdue" | "trial" | "cancelled";
+export type StudentPlanCycle = "monthly" | "semester" | "yearly";
+export type StudentAccessSource = "manual" | "kiwify" | "hotmart";
 
 export interface StudentPlan {
   name: string;
   amount: number;
-  cycle: "monthly" | "yearly";
+  cycle: StudentPlanCycle;
   status: StudentPlanStatus;
   nextDueDate: string;
+  /** Snapshot das permissões no momento da matrícula */
+  features?: StudentPlanFeatures;
+}
+
+export interface StudentPlanTemplate {
+  id: string;
+  tenantId: string;
+  name: string;
+  amount: number;
+  cycle: StudentPlanCycle;
+  courseIds: string[];
+  active: boolean;
+  features: StudentPlanFeatures;
+  description?: string;
+  deactivatedAt?: string | null;
 }
 
 export interface StudentPayment {
@@ -287,6 +342,71 @@ export interface StudentProfile {
   notes?: string;
   skills: { name: string; percent: number }[];
   enrollments: StudentEnrollment[];
+  accessSource?: StudentAccessSource;
+  provisionalPassword?: string;
+  welcomeEmailSentAt?: string;
+  planTemplateId?: string;
+}
+
+export type IntegrationProvider = "kiwify" | "hotmart";
+
+export interface ProductCourseMapping {
+  externalProductId: string;
+  externalProductName: string;
+  courseId: string;
+  planTemplateId?: string;
+}
+
+export interface TenantIntegration {
+  provider: IntegrationProvider;
+  enabled: boolean;
+  webhookUrl: string;
+  webhookSecret: string;
+  productMappings: ProductCourseMapping[];
+}
+
+export interface WebhookEvent {
+  id: string;
+  tenantId: string;
+  provider: IntegrationProvider;
+  type: "purchase_approved" | "refund" | "subscription_cancelled";
+  buyerEmail: string;
+  buyerName: string;
+  productId: string;
+  processedAt: string;
+  status: "success" | "ignored" | "error";
+  studentId?: string;
+  message: string;
+}
+
+export type SupportConversationStatus =
+  | "open"
+  | "waiting_student"
+  | "waiting_support"
+  | "resolved"
+  | "closed";
+
+export type SupportMessageAuthorRole = "student" | "staff";
+
+export interface SupportMessage {
+  id: string;
+  conversationId: string;
+  authorRole: SupportMessageAuthorRole;
+  authorName: string;
+  body: string;
+  sentAt: string;
+}
+
+export interface SupportConversation {
+  id: string;
+  tenantId: string;
+  studentId: string;
+  studentName: string;
+  subject: string;
+  status: SupportConversationStatus;
+  createdAt: string;
+  updatedAt: string;
+  messages: SupportMessage[];
 }
 
 export interface ActivityItem {

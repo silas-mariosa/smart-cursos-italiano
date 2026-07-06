@@ -154,8 +154,20 @@ export function duplicateSection(doc: PageDocument, sectionId: string): PageDocu
 }
 
 export function removeSection(doc: PageDocument, sectionId: string): PageDocument {
-  const sections = doc.sections.filter((s) => s.id !== sectionId);
-  return { ...doc, sections: sections.length ? sections : [createSection("Seção 1", 1)] };
+  return { ...doc, sections: doc.sections.filter((s) => s.id !== sectionId) };
+}
+
+export function countDocumentComponents(doc: PageDocument): number {
+  return doc.sections.reduce(
+    (total, section) =>
+      total +
+      section.columns.reduce(
+        (colTotal, col) =>
+          colTotal + getColumnRows(col).reduce((rowTotal, row) => rowTotal + row.components.length, 0),
+        0,
+      ),
+    0,
+  );
 }
 
 export function reorderSections(doc: PageDocument, sourceId: string, targetId: string, after: boolean): PageDocument {

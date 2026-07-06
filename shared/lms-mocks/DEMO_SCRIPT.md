@@ -1,52 +1,36 @@
-# Roteiro de demonstração — Studio Italiano
+# Roteiro de demo comercial — planos manuais + webhooks
 
-## Pré-requisitos
+Use CRM em `localhost:3001` (ou porta do CRM) e frontend aluno em `localhost:3000/studio-italiano`.
 
-- Frontend: `cd frontend-curso-italiano && npm run dev` (porta 3000)
-- CRM: `cd crm-curso-italiano && npm run dev` (porta 3001)
-- `NEXT_PUBLIC_DEMO_MODE=true` nos `.env.local` de ambos os apps
+## Cenário 1 — Gestão manual
 
-## Roteiro (15 min)
+| Passo | Onde | Ação | Resultado |
+|-------|------|------|-----------|
+| 1 | CRM → Login | Entrar como **Prof. Giulia** (Escola Roma Básica) | Plano Basic |
+| 2 | CRM → Meu plano | **Escolher plano** Pro (mock) | Módulos extras desbloqueados |
+| 3 | CRM → Planos de alunos | Criar template **Semestral A1** com cursos A1+A2 | Catálogo |
+| 4 | CRM → Alunos | Cadastrar aluno + template | Aluno pending, matriculado |
+| 5 | CRM → Aluno → Cursos | Adicionar curso extra manualmente | Matrícula adicional |
+| 6 | CRM → Aluno → Financeiro | Registrar pagamento → **Confirmar** | Status active |
+| 7 | Frontend → Ana | Minha conta | Plano e cursos liberados |
+| 8 | CRM → Aluno → Financeiro | **Marcar inadimplente** | — |
+| 9 | Frontend → Ana | Tentar abrir curso | Tela bloqueada + CTA suporte |
+| 10 | Frontend → Suporte | Nova conversa "Problema com pagamento" | Status open |
+| 11 | CRM → Suporte | Responder Ana | Status waiting_student |
+| 12 | Frontend → Ana | Ver resposta no chat | Thread completa |
 
-### Parte 1 — Experiência do aluno (~8 min)
+## Cenário 2 — Kiwify/Hotmart (mock)
 
-1. Abrir `http://localhost:3000/studio-italiano`
-2. Landing → login como **Ana Silva**
-3. Dashboard: card **Convocado** para aula ao vivo (se visível)
-4. **Continuar de onde parou** → player de aula (só vídeo/texto/PDF)
-5. Clicar **Ir para prática** → aba Quizzes, Flashcards, Simulador
-6. Completar quiz com feedback → enviar redação
-7. Header → **Central de prática** (`/praticar`)
+| Passo | Onde | Ação | Resultado |
+|-------|------|------|-----------|
+| 1 | CRM → Configuração → Integrações | Ativar Kiwify, mapear produto → curso | URL webhook |
+| 2 | CRM → Integrações | **Simular compra aprovada** | Preview e-mail + aluno criado |
+| 3 | CRM → Aluno | Ver senha provisória e origem Kiwify | Dados mock |
+| 4 | Frontend → Login | Maria Costa (badge Kiwify) | Senha demo: `Maria2026` |
 
-### Parte 1b — Aula ao vivo (~5 min)
+## Personas úteis
 
-1. Dashboard → **Entrar na aula ao vivo**
-2. Lobby: preview câmera/mic, convocação do professor, countdown
-3. **Entrar na aula ao vivo** → sala estilo Google Meet
-4. Testar mic, câmera, chat, levantar mão, sair
-
-### Parte 2 — Experiência do professor (~6 min)
-
-1. Abrir `http://localhost:3001/login`
-2. Entrar como **Prof. Marco Rossi**
-3. Dashboard: correções pendentes (badge)
-4. Abrir fila de correções → corrigir redação da Ana
-5. Voltar ao frontend (Ana) → ver nota em "Minhas notas"
-6. Abrir editor de curso A1 → adicionar bloco de texto
-7. Pré-visualizar como aluno (nova aba)
-
-### Parte 3 — Admin (~2 min)
-
-1. Login como **Admin Escola**
-2. Configuração → alterar cor primária
-3. Abrir landing em nova aba → ver cores aplicadas
-
-## Personas disponíveis
-
-| Persona | App | Progresso |
-|---------|-----|-----------|
-| Ana Silva | Frontend | 45% A1 |
-| Lucas Mendes | Frontend | 90% A1 |
-| Maria Costa | Frontend | 12% A1 |
-| Prof. Marco Rossi | CRM | — |
-| Admin Escola | CRM | — |
+- **Marco Rossi** — Studio Italiano, Pro (suporte + alunos Ana/Lucas/Maria)
+- **Giulia Bianchi** — Roma Básica, Basic (upgrade demo)
+- **Ana Silva** — aluna active, conversa suporte demo aberta
+- **Maria Costa** — aluna via Kiwify, status pending até confirmação no CRM

@@ -141,8 +141,22 @@ export function resolveExerciseGamification(exercise: Exercise): ExerciseGamific
 export function getExerciseUsageInCourses(
   exerciseId: string,
   courses: Course[],
-): { lessonId: string; lessonTitle: string; courseId: string; courseTitle: string }[] {
-  const usage: { lessonId: string; lessonTitle: string; courseId: string; courseTitle: string }[] = [];
+): {
+  lessonId: string;
+  lessonTitle: string;
+  lessonSlug: string;
+  moduleSlug: string;
+  courseId: string;
+  courseTitle: string;
+}[] {
+  const usage: {
+    lessonId: string;
+    lessonTitle: string;
+    lessonSlug: string;
+    moduleSlug: string;
+    courseId: string;
+    courseTitle: string;
+  }[] = [];
   for (const course of courses) {
     for (const mod of course.modules) {
       for (const lesson of mod.lessons) {
@@ -153,6 +167,8 @@ export function getExerciseUsageInCourses(
           usage.push({
             lessonId: lesson.id,
             lessonTitle: lesson.title,
+            lessonSlug: lesson.slug,
+            moduleSlug: mod.slug,
             courseId: course.id,
             courseTitle: course.title,
           });

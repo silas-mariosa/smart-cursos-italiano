@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Dumbbell, HelpCircle, Layers, MessageCircle } from "lucide-react";
+import { StudentFeatureGate } from "@/components/lms/student-feature-gate";
 import { useDemoCourses } from "@/lib/hooks/useDemoCourses";
 import { getLessonExerciseIds, lessonHasPractice } from "@lms-mocks/lesson-utils";
+import { getStudentLessonPracticeHref } from "@lms-mocks/course-routes";
 import { getFlashcardsByLesson } from "@lms-mocks/flashcards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,7 @@ export default function PracticeHubPage() {
   const publishedCourses = courses.filter((c) => c.status === "published");
 
   return (
+    <StudentFeatureGate feature="exerciseBank">
     <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -67,7 +70,7 @@ export default function PracticeHubPage() {
                             <Badge variant="outline">Simulador</Badge>
                           </div>
                         </div>
-                        <Link href={`/${tenantSlug}/cursos/${course.id}/aulas/${lesson.id}/praticar`}>
+                        <Link href={getStudentLessonPracticeHref(tenantSlug, course.id, mod.slug, lesson.slug)}>
                           <Button>Praticar</Button>
                         </Link>
                       </CardContent>
@@ -79,5 +82,6 @@ export default function PracticeHubPage() {
         </section>
       ))}
     </div>
+    </StudentFeatureGate>
   );
 }

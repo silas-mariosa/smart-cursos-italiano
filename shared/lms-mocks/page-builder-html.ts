@@ -1,4 +1,5 @@
-import type { BoxStyle, PageComponent, PageDocument, PageSection, Spacing, Typography } from "./page-builder-types";
+import type { BoxStyle, PageComponent, PageDocument, PageSection, Spacing, TableCellData, Typography } from "./page-builder-types";
+import { headingTag, headingTypographyStyle, normalizeHeadingLevel } from "./heading-styles";
 
 function escapeHtml(text: string): string {
   return text
@@ -75,6 +76,24 @@ function inlineText(text: string): string {
   return text;
 }
 
+function normalizeTableRows(raw: unknown): TableCellData[][] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    if (!Array.isArray(row)) return [{ content: "" }];
+    return row.map((cell) => (typeof cell === "string" ? { content: cell } : (cell as TableCellData)));
+  });
+}
+
+const ICON_EMOJI: Record<string, string> = {
+  "volume-2": "🔊",
+  "alert-triangle": "⚠️",
+  lightbulb: "💡",
+  "book-open": "📖",
+  "message-square": "💬",
+  "help-circle": "❓",
+  star: "⭐",
+};
+
 function renderComponent(c: PageComponent): string {
   const style = boxStyleToCss(c.style);
   const wrap = (inner: string) =>
@@ -82,9 +101,12 @@ function renderComponent(c: PageComponent): string {
 
   switch (c.type) {
     case "heading": {
-      const level = (c.props.level as number) ?? 2;
-      const tag = level <= 2 ? "h2" : level === 3 ? "h3" : "h4";
-      return wrap(`<${tag}>${escapeHtml(String(c.props.text ?? ""))}</${tag}>`);
+      const level = normalizeHeadingLevel(c.props.level);
+      const tag = headingTag(level);
+      const hs = headingTypographyStyle(level, c.style?.typography);
+      const headingCss = `font-size:${hs.fontSize}px;font-weight:${hs.fontWeight};line-height:${hs.lineHeight};margin:0`;
+      const color = c.style?.color ? `color:${c.style.color};` : "";
+      return wrap(`<${tag} style="${headingCss};${color}">${escapeHtml(String(c.props.text ?? ""))}</${tag}>`);
     }
     case "paragraph":
       return wrap(`<p>${inlineText(String(c.props.text ?? ""))}</p>`);
@@ -141,16 +163,105 @@ function renderComponent(c: PageComponent): string {
     }
     case "table": {
       const headers = (c.props.headers as string[]) ?? [];
-      const rows = (c.props.rows as string[][]) ?? [];
-      const th = headers.map((h) => `<th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb">${escapeHtml(h)}</th>`).join("");
+      const rows = normalizeTableRows(c.props.rows);
+      const th = headers.map((h) => `<th style="padding:8px;border:1px solid #e5e7eb;background:#f9fafb;text-align:center">${escapeHtml(h)}</th>`).join("");
       const tr = rows
         .map(
           (row) =>
-            `<tr>${row.map((cell) => `<td style="padding:8px;border:1px solid #e5e7eb">${inlineText(cell)}</td>`).join("")}</tr>`,
+            `<tr>${row
+              .map((cell) => {
+                const attrs = [
+                  cell.rowspan ? `rowspan="${cell.rowspan}"` : "",
+                  cell.colspan ? `colspan="${cell.colspan}"` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return `<td style="padding:8px;border:1px solid #e5e7eb;text-align:center"${attrs ? ` ${attrs}` : ""}>${inlineText(cell.content)}</td>`;
+              })
+              .join("")}</tr>`,
         )
         .join("");
       return wrap(
         `<table style="width:100%;border-collapse:collapse;font-size:0.9rem"><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`,
+      );
+    }
+    case "icon-badge": {
+      const emoji = ICON_EMOJI[String(c.props.icon ?? "volume-2")] ?? "📌";
+      const variant = String(c.props.variant ?? "info");
+      const bg: Record<string, string> = { info: "#2563eb", warning: "#f59e0b", tip: "#059669" };
+      const side = c.props.content
+        ? `<div style="border-left:2px solid #bfdbfe;padding-left:12px;font-size:0.875rem;color:#6b7280;flex:1">${inlineText(String(c.props.content))}</div>`
+        : "";
+      return wrap(
+        `<div style="display:flex;gap:12px;align-items:flex-start"><div style="text-align:center;width:64px;flex-shrink:0"><div style="width:40px;height:40px;border-radius:8px;background:${bg[variant] ?? bg.info};display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:1.25rem">${emoji}</div><p style="font-size:0.75rem;font-weight:600;color:#1d4ed8;margin:4px 0 0">${escapeHtml(String(c.props.label ?? ""))}${c.props.subtitle ? ` <span style="color:#93c5fd">${escapeHtml(String(c.props.subtitle))}</span>` : ""}</p></div>${side}</div>`,
+      );
+    }
+    case "example-grid": {
+      const cols = Number(c.props.columns ?? 2);
+      const items = (c.props.items as { left: string; right?: string }[]) ?? [];
+      const gridCols = cols === 1 ? "1fr" : cols === 3 ? "repeat(3,1fr)" : "repeat(2,1fr)";
+      return wrap(
+        `<div style="display:grid;grid-template-columns:${gridCols};gap:8px">${items
+          .map(
+            (item) =>
+              `<div style="background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:0.875rem">${inlineText(item.left)}${item.right ? ` <span style="color:#6b7280;font-style:italic">${inlineText(item.right)}</span>` : ""}</div>`,
+          )
+          .join("")}</div>`,
+      );
+    }
+    case "dialogue-box": {
+      const lines = (c.props.lines as { speaker: string; text: string }[]) ?? [];
+      const ctx = c.props.context ? `<p style="font-size:0.875rem;color:#6b7280;font-style:italic;margin:0 0 8px">${inlineText(String(c.props.context))}</p>` : "";
+      const inner = lines.map((l) => `<p style="margin:0 0 6px;font-size:0.875rem"><strong>${escapeHtml(l.speaker)}:</strong> ${escapeHtml(l.text)}</p>`).join("");
+      return wrap(`<div>${ctx}<div style="background:#eff6ff;border-radius:12px;padding:16px">${inner}</div></div>`);
+    }
+    case "vocabulary-box": {
+      const pairs = (c.props.pairs as { term: string; translation: string }[]) ?? [];
+      const bg = escapeHtml(String(c.props.backgroundColor ?? "#6b21a8"));
+      const rows = pairs
+        .map(
+          (p) =>
+            `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.875rem;margin-bottom:4px"><span style="font-weight:500">${escapeHtml(p.term)}</span><span style="opacity:0.75">${escapeHtml(p.translation)}</span></div>`,
+        )
+        .join("");
+      return wrap(
+        `<div style="background:${bg};color:#fff;border-radius:12px;padding:16px"><p style="font-weight:700;font-size:0.875rem;margin:0 0 12px">${escapeHtml(String(c.props.title ?? "Vocabulário"))}</p>${rows}</div>`,
+      );
+    }
+    case "writing-lines": {
+      const lineCount = Number(c.props.lineCount ?? 2);
+      const prompt = c.props.prompt ? `<p style="font-size:0.875rem;font-weight:500;margin:0 0 8px">${inlineText(String(c.props.prompt))}</p>` : "";
+      const lines = Array.from({ length: lineCount })
+        .map(() => `<div style="border-bottom:1px dashed #9ca3af;height:32px;margin-bottom:4px"></div>`)
+        .join("");
+      return wrap(`${prompt}${lines}`);
+    }
+    case "infobox": {
+      const sections = (c.props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [];
+      const body = sections
+        .map(
+          (sec) =>
+            `<div style="margin-bottom:12px">${sec.subtitle ? `<p style="font-size:0.75rem;font-weight:600;color:#6b21a8;margin:0 0 4px">${escapeHtml(sec.subtitle)}</p>` : ""}${sec.rows.map((r) => `<div style="display:grid;grid-template-columns:1fr 1fr;font-size:0.875rem;padding:2px 0"><span>${escapeHtml(r.left)}</span><span style="text-align:right;color:#6b7280">${escapeHtml(r.right)}</span></div>`).join("")}</div>`,
+        )
+        .join("");
+      return wrap(
+        `<div style="border:2px solid #6b21a8;border-radius:8px;overflow:hidden"><div style="background:#6b21a8;color:#fff;padding:6px 12px;font-weight:600;font-size:0.875rem">${escapeHtml(String(c.props.title ?? "Infobox"))}</div><div style="padding:12px">${body}</div></div>`,
+      );
+    }
+    case "activity": {
+      const title = c.props.title ? `<p style="font-weight:600;color:#2563eb;margin:0 0 4px">${escapeHtml(String(c.props.title))}</p>` : "";
+      const instr = c.props.instructions ? `<p style="font-size:0.875rem;color:#6b7280;margin:0 0 12px">${escapeHtml(String(c.props.instructions))}</p>` : "";
+      const source = String(c.props.source ?? "bank");
+      let body = "";
+      if (source === "bank" && c.props.exerciseId) {
+        body = `<p style="font-size:0.875rem">[Exercício: ${escapeHtml(String(c.props.exerciseId))}]</p>`;
+      } else if (source === "manual" && c.props.manualTitle) {
+        body = `<p style="font-size:0.875rem;font-weight:500">${escapeHtml(String(c.props.manualTitle))}</p>`;
+      } else {
+        body = `<p style="font-size:0.875rem;color:#6b7280;font-style:italic">Atividade interativa</p>`;
+      }
+      return wrap(
+        `<div style="border:2px dashed #93c5fd;border-radius:12px;padding:16px;background:#eff6ff">${title}${instr}${body}</div>`,
       );
     }
     case "separator":

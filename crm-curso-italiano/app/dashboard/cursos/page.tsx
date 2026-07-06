@@ -56,8 +56,8 @@ export default function CoursesListPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Meus cursos</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger>
-            <Button>+ Criar curso</Button>
+          <DialogTrigger asChild>
+            <Button type="button">+ Criar curso</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

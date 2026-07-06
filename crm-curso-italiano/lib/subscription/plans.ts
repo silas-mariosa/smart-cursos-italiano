@@ -1,6 +1,6 @@
 import type { BusinessPlanDefinition } from "@lms-mocks/business-plans";
 import { BUSINESS_PLANS, getPlanDefinition } from "@lms-mocks/business-plans";
-import type { CrmModule, Tenant } from "@lms-mocks/types";
+import type { CrmModule, Tenant, TenantAiConfig } from "@lms-mocks/types";
 
 export type ResolvedTenantPlan = BusinessPlanDefinition & {
   label: string;
@@ -39,6 +39,21 @@ export function canAccessModule(tenant: Tenant, module: CrmModule): boolean {
   return plan.modules.includes(module);
 }
 
+export function tenantHasConfigurationModule(tenant: Tenant): boolean {
+  return canAccessModule(tenant, "branding") || canAccessModule(tenant, "aiGeneration");
+}
+
+export function canAccessConfiguration(tenant: Tenant, isAdmin: boolean): boolean {
+  return isAdmin && tenantHasConfigurationModule(tenant);
+}
+
+export function isAiGenerationReady(tenant: Tenant, aiConfig: TenantAiConfig): boolean {
+  if (!canAccessModule(tenant, "aiGeneration")) return false;
+  if (!aiConfig.enabled) return false;
+  if (!aiConfig.apiKey.trim()) return false;
+  return aiConfig.lastValidatedAt !== null;
+}
+
 export function canAddStudent(tenant: Tenant, currentCount: number): boolean {
   const { maxStudents, subscriptionStatus } = resolveTenantPlan(tenant);
   if (subscriptionStatus === "expired") return false;
@@ -74,10 +89,16 @@ export const ROUTE_MODULE_MAP: Record<string, CrmModule> = {
   "/dashboard/ao-vivo": "live",
   "/dashboard/praticar": "practice",
   "/dashboard/exercicios": "exerciseBank",
+  "/dashboard/simulados": "mockExams",
   "/dashboard/correcoes": "corrections",
   "/dashboard/alunos": "students",
+  "/dashboard/alunos/planos": "students",
+  "/dashboard/suporte": "support",
   "/dashboard/configuracao": "branding",
+  "/dashboard/configuracao/integracoes": "branding",
 };
+
+const CONFIGURATION_PATH = "/dashboard/configuracao";
 
 export function getModuleForPath(pathname: string): CrmModule | null {
   const entries = Object.entries(ROUTE_MODULE_MAP).sort((a, b) => b[0].length - a[0].length);
@@ -90,6 +111,9 @@ export function getModuleForPath(pathname: string): CrmModule | null {
 }
 
 export function canAccessPath(tenant: Tenant, pathname: string): boolean {
+  if (pathname === CONFIGURATION_PATH || pathname.startsWith(`${CONFIGURATION_PATH}/`)) {
+    return tenantHasConfigurationModule(tenant);
+  }
   const module = getModuleForPath(pathname);
   if (!module) return true;
   return canAccessModule(tenant, module);

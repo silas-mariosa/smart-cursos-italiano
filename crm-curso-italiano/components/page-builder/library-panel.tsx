@@ -3,19 +3,25 @@
 import {
   AlignLeft,
   AlertCircle,
+  BadgeCheck,
+  BookOpen,
   ChevronsUpDown,
   Code,
   Download,
   ExternalLink,
+  HelpCircle,
   Image,
+  Info,
   LayoutGrid,
   Lightbulb,
   List,
   Megaphone,
+  MessageSquare,
   Minus,
   MousePointer,
   MoveVertical,
   PanelTop,
+  PenLine,
   Quote,
   SeparatorHorizontal,
   Square,
@@ -53,6 +59,12 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   PanelTop,
   Code,
   SeparatorHorizontal,
+  BadgeCheck,
+  BookOpen,
+  MessageSquare,
+  PenLine,
+  Info,
+  HelpCircle,
 };
 
 interface LibraryPanelProps {
@@ -91,11 +103,16 @@ export function LibraryPanel({
 
       <TabsContent value="components" className="flex-1 mt-0 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-14rem)] px-3 pb-4">
-          {!activeColumnId && (
+          {document.sections.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-3 mb-3 text-center">
+              <p className="text-xs text-muted-foreground">A página está vazia.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Adicione uma seção no canvas ou use a aba Layouts.</p>
+            </div>
+          ) : !activeColumnId ? (
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-              Selecione uma coluna no canvas para inserir componentes.
+              Selecione uma coluna ou linha no canvas para inserir componentes.
             </p>
-          )}
+          ) : null}
           {Object.entries(byCategory).map(([cat, items]) => (
             <div key={cat} className="mb-4">
               <p className="text-xs font-semibold text-muted-foreground mb-2">{cat}</p>
@@ -126,6 +143,9 @@ export function LibraryPanel({
 
       <TabsContent value="layouts" className="flex-1 mt-0 overflow-hidden">
         <ScrollArea className="h-[calc(100vh-14rem)] px-3 pb-4">
+          <p className="text-[10px] text-muted-foreground mb-3 px-1">
+            Layouts completos para aulas de idiomas. Use &quot;Substituir&quot; para começar do zero ou &quot;Adicionar&quot; para acrescentar à página.
+          </p>
           {Object.entries(layoutsByCat).map(([cat, layouts]) => (
             <div key={cat} className="mb-4">
               <p className="text-xs font-semibold text-muted-foreground mb-2">{cat}</p>

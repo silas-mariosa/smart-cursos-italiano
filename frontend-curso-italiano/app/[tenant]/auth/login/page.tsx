@@ -56,11 +56,25 @@ export default function LoginPage() {
                     <p className="font-medium text-sm">{s.name}</p>
                     <p className="text-xs text-muted-foreground">{s.description}</p>
                   </div>
-                  {s.progressPercent !== undefined && (
+                  {s.id === "persona-maria" && (
+                    <Badge variant="outline" className="text-[10px]">
+                      Kiwify
+                    </Badge>
+                  )}
+                  {s.progressPercent !== undefined && s.id !== "persona-maria" && (
                     <Badge variant="secondary">{s.progressPercent}%</Badge>
                   )}
                 </button>
               ))}
+            </div>
+            <div className="rounded-lg border border-dashed p-4 space-y-2 text-sm text-muted-foreground">
+              <p>
+                Recebeu <strong>senha provisória</strong> por e-mail após compra (Kiwify/Hotmart)? Na versão com
+                servidor, use seu e-mail para entrar.
+              </p>
+              <p className="text-xs">
+                Demo: Maria Costa (compra via Kiwify) — senha provisória mock: <code className="bg-muted px-1 rounded">Maria2026</code>
+              </p>
             </div>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">

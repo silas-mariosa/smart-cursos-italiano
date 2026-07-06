@@ -8,7 +8,9 @@ import {
   getExerciseUsageInCourses,
   resolveExerciseGamification,
 } from "@lms-mocks/exercises";
+import { getCrmLessonEditHref } from "@lms-mocks/course-routes";
 import { useMockStore } from "@/lib/mock-store";
+import { useTenantPlan } from "@/lib/subscription/use-tenant-plan";
 import {
   DIFFICULTY_COLORS,
   DIFFICULTY_LABELS,
@@ -54,6 +56,7 @@ interface ExerciseBankPanelProps {
 export function ExerciseBankPanel({ variant = "full", showHeader = true }: ExerciseBankPanelProps) {
   const { exercises, courses, tenant, addExercise, updateExercise, deleteExercise, duplicateExercise } =
     useMockStore();
+  const { canUseAiGeneration, hasAiGenerationModule } = useTenantPlan();
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -63,6 +66,7 @@ export function ExerciseBankPanel({ variant = "full", showHeader = true }: Exerc
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     const byType = exercises.reduce(
@@ -122,6 +126,12 @@ export function ExerciseBankPanel({ variant = "full", showHeader = true }: Exerc
     setDeleteError(null);
   }
 
+  function handleGenerateWithAi() {
+    if (!canUseAiGeneration) return;
+    setAiMessage("Geração simulada — conecte o backend na Fase 2.");
+    setTimeout(() => setAiMessage(null), 4000);
+  }
+
   const isCompact = variant === "compact";
 
   return (
@@ -137,11 +147,31 @@ export function ExerciseBankPanel({ variant = "full", showHeader = true }: Exerc
               Crie, organize e gamifique exercícios reutilizáveis em qualquer aula.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" disabled title="Disponível na Fase 2">
-              <Sparkles className="size-4 mr-2" />
-              Gerar com IA
-            </Button>
+          <div className="flex flex-wrap gap-2 items-center">
+            {hasAiGenerationModule ? (
+              canUseAiGeneration ? (
+                <Button variant="outline" onClick={handleGenerateWithAi}>
+                  <Sparkles className="size-4 mr-2" />
+                  Gerar com IA
+                </Button>
+              ) : (
+                <Button variant="outline" disabled title="Configure a API em Configuração">
+                  <Sparkles className="size-4 mr-2" />
+                  Gerar com IA
+                </Button>
+              )
+            ) : (
+              <Button variant="outline" disabled title="Disponível no plano Pro ou superior">
+                <Sparkles className="size-4 mr-2" />
+                Gerar com IA
+              </Button>
+            )}
+            {hasAiGenerationModule && !canUseAiGeneration && (
+              <Link href="/dashboard/configuracao" className="text-xs text-primary hover:underline">
+                Configurar API ChatGPT
+              </Link>
+            )}
+            {aiMessage && <span className="text-xs text-emerald-600">{aiMessage}</span>}
             <Button onClick={openCreate}>
               <Plus className="size-4 mr-2" />
               Nova questão
@@ -409,7 +439,10 @@ function ExerciseCard({
             {usage.length > 0 && layout === "list" && !compact && (
               <div className="flex flex-wrap gap-1">
                 {usage.map((u) => (
-                  <Link key={u.lessonId} href={`/dashboard/cursos/${u.courseId}/aulas/${u.lessonId}/praticar`}>
+                  <Link
+                    key={u.lessonId}
+                    href={getCrmLessonEditHref(u.courseId, u.moduleSlug, u.lessonSlug, "praticar")}
+                  >
                     <Badge variant="outline" className="text-[10px] cursor-pointer hover:bg-accent">
                       {u.courseTitle} → {u.lessonTitle}
                     </Badge>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { BoxStyle, PageComponent, PageDocument, SelectionTarget, Spacing } from "@lms-mocks/page-builder-types";
+import type { BoxStyle, PageComponent, PageDocument, SelectionTarget, Spacing, TableCellData } from "@lms-mocks/page-builder-types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +12,9 @@ import { Slider } from "@/components/ui/slider";
 import { getCatalogLabel } from "@/lib/page-builder/catalog";
 import { resolveSelection } from "@/lib/page-builder/document";
 import { saveReusableBlock } from "@/lib/page-builder/document";
+import { headingStylePatchForLevel, normalizeHeadingLevel } from "@lms-mocks/heading-styles";
+import { TableEditor } from "@/components/page-builder/editors/table-editor";
+import { ActivityEditor } from "@/components/page-builder/editors/activity-editor";
 import {
   buildShadowFromIntensity,
   getUniformSpacing,
@@ -283,12 +286,22 @@ function StyleEditor({
   );
 }
 
+function normalizeTableRows(raw: unknown): TableCellData[][] {
+  if (!Array.isArray(raw)) return [[{ content: "" }]];
+  return raw.map((row) => {
+    if (!Array.isArray(row)) return [{ content: "" }];
+    return row.map((cell) => (typeof cell === "string" ? { content: cell } : (cell as TableCellData)));
+  });
+}
+
 function ComponentPropsEditor({
   component,
   onChange,
+  onPatch,
 }: {
   component: PageComponent;
   onChange: (props: Record<string, unknown>) => void;
+  onPatch?: (patch: { props?: Record<string, unknown>; style?: BoxStyle }) => void;
 }) {
   const props = component.props;
   const set = (key: string, value: unknown) => onChange({ ...props, [key]: value });
@@ -303,10 +316,31 @@ function ComponentPropsEditor({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Nível</Label>
-            <select className="w-full h-9 border rounded-md px-2 text-sm bg-background" value={Number(props.level ?? 2)} onChange={(e) => set("level", Number(e.target.value))}>
-              <option value={2}>H2 — Grande</option>
-              <option value={3}>H3 — Médio</option>
-              <option value={4}>H4 — Pequeno</option>
+            <select
+              className="w-full h-9 border rounded-md px-2 text-sm bg-background"
+              value={Number(props.level ?? 2)}
+              onChange={(e) => {
+                const level = normalizeHeadingLevel(Number(e.target.value));
+                const levelStyle = headingStylePatchForLevel(level);
+                if (onPatch) {
+                  onPatch({
+                    props: { ...props, level },
+                    style: {
+                      ...component.style,
+                      typography: {
+                        ...component.style?.typography,
+                        ...levelStyle.typography,
+                      },
+                    },
+                  });
+                } else {
+                  set("level", level);
+                }
+              }}
+            >
+              <option value={2}>H2 — Grande (28px)</option>
+              <option value={3}>H3 — Médio (22px)</option>
+              <option value={4}>H4 — Pequeno (18px)</option>
             </select>
           </div>
         </div>
@@ -462,6 +496,260 @@ function ComponentPropsEditor({
           </Button>
         </div>
       );
+    case "table":
+      return (
+        <TableEditor
+          headers={(props.headers as string[]) ?? ["Coluna 1", "Coluna 2"]}
+          rows={normalizeTableRows(props.rows)}
+          onChange={(headers, rows) => onChange({ ...props, headers, rows })}
+        />
+      );
+    case "icon-badge":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Ícone</Label>
+            <select className="w-full h-9 border rounded-md px-2 text-sm bg-background" value={String(props.icon ?? "volume-2")} onChange={(e) => set("icon", e.target.value)}>
+              <option value="volume-2">Áudio (volume)</option>
+              <option value="alert-triangle">Atenção (triângulo)</option>
+              <option value="lightbulb">Dica (lâmpada)</option>
+              <option value="book-open">Livro / Seção</option>
+              <option value="message-square">Diálogo</option>
+              <option value="help-circle">Ajuda</option>
+              <option value="star">Destaque</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Rótulo</Label>
+            <Input value={String(props.label ?? "")} onChange={(e) => set("label", e.target.value)} placeholder="Áudio" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Subtítulo</Label>
+            <Input value={String(props.subtitle ?? "")} onChange={(e) => set("subtitle", e.target.value)} placeholder="|" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Texto lateral</Label>
+            <Textarea rows={3} value={String(props.content ?? "")} onChange={(e) => set("content", e.target.value)} placeholder="Exceções, notas..." />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Variante</Label>
+            <select className="w-full h-9 border rounded-md px-2 text-sm bg-background" value={String(props.variant ?? "info")} onChange={(e) => set("variant", e.target.value)}>
+              <option value="info">Informação (azul)</option>
+              <option value="warning">Atenção (âmbar)</option>
+              <option value="tip">Dica (verde)</option>
+            </select>
+          </div>
+        </div>
+      );
+    case "example-grid":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Colunas</Label>
+            <select className="w-full h-8 border rounded-md px-2 text-xs bg-background" value={Number(props.columns ?? 2)} onChange={(e) => set("columns", Number(e.target.value))}>
+              <option value={1}>1 coluna</option>
+              <option value={2}>2 colunas</option>
+              <option value={3}>3 colunas</option>
+            </select>
+          </div>
+          {((props.items as { left: string; right?: string }[]) ?? []).map((item, i) => (
+            <div key={i} className="border rounded-lg p-2 space-y-1">
+              <Input className="h-8 text-xs" value={item.left} placeholder="Exemplo (EN)" onChange={(e) => {
+                const items = [...((props.items as { left: string; right?: string }[]) ?? [])];
+                items[i] = { ...items[i], left: e.target.value };
+                set("items", items);
+              }} />
+              <Input className="h-8 text-xs" value={item.right ?? ""} placeholder="Tradução / contração" onChange={(e) => {
+                const items = [...((props.items as { left: string; right?: string }[]) ?? [])];
+                items[i] = { ...items[i], right: e.target.value };
+                set("items", items);
+              }} />
+              <Button type="button" variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => {
+                const items = ((props.items as { left: string; right?: string }[]) ?? []).filter((_, j) => j !== i);
+                set("items", items);
+              }}>Remover</Button>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("items", [...((props.items as { left: string; right?: string }[]) ?? []), { left: "Novo exemplo", right: "" }])}>
+            + Exemplo
+          </Button>
+        </div>
+      );
+    case "dialogue-box":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Contexto</Label>
+            <Textarea rows={2} value={String(props.context ?? "")} onChange={(e) => set("context", e.target.value)} />
+          </div>
+          {((props.lines as { speaker: string; text: string }[]) ?? []).map((line, i) => (
+            <div key={i} className="border rounded-lg p-2 space-y-1">
+              <Input className="h-8 text-xs" value={line.speaker} placeholder="Falante" onChange={(e) => {
+                const lines = [...((props.lines as { speaker: string; text: string }[]) ?? [])];
+                lines[i] = { ...lines[i], speaker: e.target.value };
+                set("lines", lines);
+              }} />
+              <Textarea rows={2} className="text-xs" value={line.text} onChange={(e) => {
+                const lines = [...((props.lines as { speaker: string; text: string }[]) ?? [])];
+                lines[i] = { ...lines[i], text: e.target.value };
+                set("lines", lines);
+              }} />
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("lines", [...((props.lines as { speaker: string; text: string }[]) ?? []), { speaker: "Nome", text: "Fala..." }])}>
+            + Linha de diálogo
+          </Button>
+        </div>
+      );
+    case "vocabulary-box":
+      return (
+        <div className="space-y-2">
+          <Input placeholder="Título" value={String(props.title ?? "")} onChange={(e) => set("title", e.target.value)} />
+          <div className="space-y-1">
+            <Label className="text-xs">Cor de fundo</Label>
+            <Input type="color" className="h-8 w-full" value={String(props.backgroundColor ?? "#6b21a8")} onChange={(e) => set("backgroundColor", e.target.value)} />
+          </div>
+          {((props.pairs as { term: string; translation: string }[]) ?? []).map((pair, i) => (
+            <div key={i} className="flex gap-1">
+              <Input className="h-8 text-xs flex-1" value={pair.term} placeholder="Termo" onChange={(e) => {
+                const pairs = [...((props.pairs as { term: string; translation: string }[]) ?? [])];
+                pairs[i] = { ...pairs[i], term: e.target.value };
+                set("pairs", pairs);
+              }} />
+              <Input className="h-8 text-xs flex-1" value={pair.translation} placeholder="Tradução" onChange={(e) => {
+                const pairs = [...((props.pairs as { term: string; translation: string }[]) ?? [])];
+                pairs[i] = { ...pairs[i], translation: e.target.value };
+                set("pairs", pairs);
+              }} />
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("pairs", [...((props.pairs as { term: string; translation: string }[]) ?? []), { term: "", translation: "" }])}>
+            + Par
+          </Button>
+        </div>
+      );
+    case "writing-lines":
+      return (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Enunciado / palavras-chave</Label>
+            <Textarea rows={2} value={String(props.prompt ?? "")} onChange={(e) => set("prompt", e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Número de linhas</Label>
+            <Input type="number" min={1} max={6} value={Number(props.lineCount ?? 2)} onChange={(e) => set("lineCount", Number(e.target.value))} />
+          </div>
+          <label className="flex items-center gap-2 text-xs">
+            <input type="checkbox" checked={!!props.showNumbers} onChange={(e) => set("showNumbers", e.target.checked)} />
+            Mostrar numeração
+          </label>
+        </div>
+      );
+    case "infobox":
+      return (
+        <div className="space-y-2">
+          <Input placeholder="Título" value={String(props.title ?? "Infobox")} onChange={(e) => set("title", e.target.value)} />
+          {((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? []).map((section, si) => (
+            <div key={si} className="border rounded-lg p-2 space-y-1">
+              <Input className="h-8 text-xs" value={section.subtitle} placeholder="Subtítulo" onChange={(e) => {
+                const sections = [...((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [])];
+                sections[si] = { ...sections[si], subtitle: e.target.value };
+                set("sections", sections);
+              }} />
+              {section.rows.map((row, ri) => (
+                <div key={ri} className="flex gap-1">
+                  <Input className="h-7 text-xs flex-1" value={row.left} onChange={(e) => {
+                    const sections = [...((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [])];
+                    sections[si].rows[ri] = { ...sections[si].rows[ri], left: e.target.value };
+                    set("sections", sections);
+                  }} />
+                  <Input className="h-7 text-xs flex-1" value={row.right} onChange={(e) => {
+                    const sections = [...((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [])];
+                    sections[si].rows[ri] = { ...sections[si].rows[ri], right: e.target.value };
+                    set("sections", sections);
+                  }} />
+                </div>
+              ))}
+              <Button type="button" variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => {
+                const sections = [...((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? [])];
+                sections[si].rows.push({ left: "", right: "" });
+                set("sections", sections);
+              }}>+ Linha</Button>
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("sections", [...((props.sections as { subtitle: string; rows: { left: string; right: string }[] }[]) ?? []), { subtitle: "Nova seção", rows: [{ left: "", right: "" }] }])}>
+            + Seção
+          </Button>
+        </div>
+      );
+    case "activity":
+      return <ActivityEditor props={props} onChange={onChange} />;
+    case "accordion":
+      return (
+        <div className="space-y-2">
+          {((props.items as { title: string; content: string }[]) ?? []).map((item, i) => (
+            <div key={i} className="border rounded-lg p-2 space-y-1">
+              <Input value={item.title} onChange={(e) => {
+                const items = [...((props.items as { title: string; content: string }[]) ?? [])];
+                items[i] = { ...items[i], title: e.target.value };
+                set("items", items);
+              }} />
+              <Textarea rows={2} className="text-xs" value={item.content} onChange={(e) => {
+                const items = [...((props.items as { title: string; content: string }[]) ?? [])];
+                items[i] = { ...items[i], content: e.target.value };
+                set("items", items);
+              }} />
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("items", [...((props.items as { title: string; content: string }[]) ?? []), { title: "Pergunta", content: "Resposta" }])}>
+            + Item
+          </Button>
+        </div>
+      );
+    case "tabs":
+      return (
+        <div className="space-y-2">
+          {((props.items as { label: string; content: string }[]) ?? []).map((item, i) => (
+            <div key={i} className="border rounded-lg p-2 space-y-1">
+              <Input value={item.label} onChange={(e) => {
+                const items = [...((props.items as { label: string; content: string }[]) ?? [])];
+                items[i] = { ...items[i], label: e.target.value };
+                set("items", items);
+              }} />
+              <Textarea rows={2} className="text-xs" value={item.content} onChange={(e) => {
+                const items = [...((props.items as { label: string; content: string }[]) ?? [])];
+                items[i] = { ...items[i], content: e.target.value };
+                set("items", items);
+              }} />
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("items", [...((props.items as { label: string; content: string }[]) ?? []), { label: "Nova aba", content: "" }])}>
+            + Aba
+          </Button>
+        </div>
+      );
+    case "card-grid":
+      return (
+        <div className="space-y-2">
+          {((props.cards as { title: string; description: string; imageUrl?: string }[]) ?? []).map((card, i) => (
+            <div key={i} className="border rounded-lg p-2 space-y-1">
+              <Input value={card.title} onChange={(e) => {
+                const cards = [...((props.cards as { title: string; description: string }[]) ?? [])];
+                cards[i] = { ...cards[i], title: e.target.value };
+                set("cards", cards);
+              }} />
+              <Input value={card.description} onChange={(e) => {
+                const cards = [...((props.cards as { title: string; description: string }[]) ?? [])];
+                cards[i] = { ...cards[i], description: e.target.value };
+                set("cards", cards);
+              }} />
+            </div>
+          ))}
+          <Button type="button" variant="outline" size="sm" onClick={() => set("cards", [...((props.cards as { title: string; description: string }[]) ?? []), { title: "Novo card", description: "" }])}>
+            + Card
+          </Button>
+        </div>
+      );
     default:
       return <p className="text-xs text-muted-foreground">Edite visualmente no canvas ou use propriedades de estilo.</p>;
   }
@@ -482,8 +770,15 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
 
   if (!resolved || !selection) {
     return (
-      <div className="p-4 text-sm text-muted-foreground text-center">
-        Selecione uma seção, coluna ou componente para editar as propriedades.
+      <div className="p-4 text-sm text-muted-foreground text-center space-y-2">
+        {document.sections.length === 0 ? (
+          <>
+            <p className="font-medium text-foreground">Página vazia</p>
+            <p className="text-xs">Adicione uma seção no canvas ou aplique um layout pela biblioteca.</p>
+          </>
+        ) : (
+          <p>Selecione uma seção, coluna ou componente para editar as propriedades.</p>
+        )}
       </div>
     );
   }
@@ -576,6 +871,7 @@ export function PropertiesPanel({ document, selection, onUpdateDocument, onUpdat
           <ComponentPropsEditor
             component={component}
             onChange={(props) => onUpdateComponent(section.id, column.id, row.id, component.id, { props })}
+            onPatch={(patch) => onUpdateComponent(section.id, column.id, row.id, component.id, patch)}
           />
           <Separator />
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estilo</p>

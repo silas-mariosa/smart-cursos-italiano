@@ -15,6 +15,8 @@
 | F08 | `/[tenant]/ao-vivo` | Lista de aulas ao vivo | Implementado |
 | F09 | `/[tenant]/ao-vivo/[sessionId]` | Lobby / convocação (pré-entrada) | Implementado |
 | F10 | `/[tenant]/ao-vivo/[sessionId]/sala` | Sala ao vivo estilo Google Meet | Implementado |
+| F11 | `/[tenant]/simulados` | Simulados (provas formais) | Implementado |
+| F12 | `/[tenant]/ao-vivo/gravacoes` | Lives gravadas (replay + biblioteca) | Implementado |
 
 ## CRM (Professor/Admin)
 
@@ -35,3 +37,8 @@
 | C13 | `/dashboard/ao-vivo/[sessionId]` | Implementado |
 | C14 | `/dashboard/praticar` | Implementado |
 | C15 | `/dashboard/cursos/[id]/aulas/[lessonId]/praticar` | Implementado |
+| C16 | `/dashboard/alunos/planos` | Planos de aluno com permissões | Implementado |
+| C17 | `/dashboard/ao-vivo/calendario` | Calendário de aulas ao vivo | Implementado |
+| C18 | `/dashboard/ao-vivo/gravacoes` | Biblioteca de lives gravadas | Implementado |
+| C19 | `/dashboard/simulados`, `/novo`, `/[id]/editar` | Editor de simulados | Implementado |
+| C20 | `/dashboard/simulados/resultados`, `/[id]/resultados` | Análise de tentativas | Implementado |

@@ -12,6 +12,10 @@ import {
 import { formatRelativeTime } from "@/lib/corrections/utils";
 import { useMockStore } from "@/lib/mock-store";
 import { HISTORY_TYPE_LABELS, PLAN_STATUS_COLORS, PLAN_STATUS_LABELS, STATUS_COLORS, STATUS_LABELS } from "@/lib/students/constants";
+import { ACCESS_SOURCE_LABELS, PLAN_CYCLE_LABELS } from "@/lib/students/access";
+import { StudentCoursesTab } from "@/components/lms/students/student-courses-tab";
+import { RegisterPaymentDialog } from "@/components/lms/students/register-payment-dialog";
+import { WelcomeEmailPreview } from "@/components/integrations/welcome-email-preview";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,14 +51,22 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
     courses,
     grades,
     attempts,
+    tenant,
     updateStudent,
     setStudentStatus,
+    confirmStudentPayment,
+    markStudentOverdue,
+    registerStudentPayment,
     enrollStudentInCourse,
     issueStudentCertificate,
+    persona,
+    createSupportConversation,
   } = useMockStore();
 
   const student = students.find((s) => s.id === studentId);
   const [notes, setNotes] = useState("");
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
 
   const pendingAttempts = student ? getStudentPendingAttempts(student.id, attempts) : [];
   const studentGrades = student ? grades.filter((g) => g.studentId === student.id) : [];
@@ -121,6 +133,9 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
                 </span>
               )}
               <span>Membro desde {new Date(student.memberSince).toLocaleDateString("pt-BR")}</span>
+              {student.accessSource && (
+                <span>Origem: {ACCESS_SOURCE_LABELS[student.accessSource]}</span>
+              )}
             </div>
           </div>
         </div>
@@ -133,6 +148,25 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
               </Button>
             </Link>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              createSupportConversation({
+                studentId: student.id,
+                subject: "Contato da escola",
+                body: "Olá! Entramos em contato sobre sua matrícula.",
+                staffName: persona?.name ?? "Equipe",
+              })
+            }
+          >
+            Iniciar conversa
+          </Button>
+          <Link href="/dashboard/suporte">
+            <Button variant="outline" size="sm">
+              Suporte
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
@@ -159,6 +193,7 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
           <TabsTrigger value="overview">Visão geral</TabsTrigger>
           <TabsTrigger value="progress">Progresso</TabsTrigger>
           <TabsTrigger value="exercises">Exercícios</TabsTrigger>
+          <TabsTrigger value="courses">Cursos</TabsTrigger>
           <TabsTrigger value="financial">Financeiro</TabsTrigger>
           <TabsTrigger value="history">Histórico</TabsTrigger>
           <TabsTrigger value="certificates">Certificados</TabsTrigger>
@@ -286,6 +321,10 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
           </section>
         </TabsContent>
 
+        <TabsContent value="courses" className="mt-6">
+          <StudentCoursesTab student={student} />
+        </TabsContent>
+
         <TabsContent value="financial" className="space-y-4 mt-6">
           {student.plan ? (
             <Card>
@@ -303,7 +342,8 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Valor</span>
                   <span>
-                    R$ {student.plan.amount.toFixed(2)} / {student.plan.cycle === "monthly" ? "mês" : "ano"}
+                    R$ {student.plan.amount.toFixed(2)} /{" "}
+                    {PLAN_CYCLE_LABELS[student.plan.cycle] ?? student.plan.cycle}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -350,14 +390,49 @@ export function StudentDetailPanel({ studentId }: StudentDetailPanelProps) {
             )}
           </section>
 
-          <Card className="border-dashed">
-            <CardContent className="py-4 flex items-center justify-between gap-3">
-              <p className="text-sm text-muted-foreground">Integração de pagamentos (Stripe/MP) — Fase 2</p>
-              <Button variant="outline" size="sm" disabled>
-                Registrar pagamento
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setPaymentOpen(true)}>
+              Registrar pagamento
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => confirmStudentPayment(student.id)}>
+              Confirmar pagamento
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => markStudentOverdue(student.id)}>
+              Marcar inadimplente
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStudentStatus(student.id, status === "active" ? "inactive" : "active")}
+            >
+              {status === "active" ? "Restringir acesso" : "Liberar acesso"}
+            </Button>
+            {student.welcomeEmailSentAt && (
+              <Button variant="ghost" size="sm" onClick={() => setEmailPreviewOpen(true)}>
+                Ver e-mail enviado
               </Button>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+
+          <RegisterPaymentDialog
+            open={paymentOpen}
+            onOpenChange={setPaymentOpen}
+            onSave={(p) =>
+              registerStudentPayment(student.id, {
+                ...p,
+                status: "paid",
+              })
+            }
+          />
+
+          {emailPreviewOpen && (
+            <WelcomeEmailPreview
+              tenantName={tenant.name}
+              tenantSlug={tenant.slug}
+              student={student}
+              courseTitles={student.enrollments.map((e) => getCourseTitle(courses, e.courseId))}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">

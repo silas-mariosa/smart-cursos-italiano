@@ -19,6 +19,14 @@ export interface SimulatorScenario {
 
 export type LiveSessionStatus = "scheduled" | "waiting" | "live" | "ended";
 
+export type LiveSessionRecurrenceUnit = "day" | "week" | "month";
+
+export interface LiveSessionRecurrence {
+  interval: number;
+  unit: LiveSessionRecurrenceUnit;
+  seriesId?: string;
+}
+
 export interface LiveSessionParticipant {
   id: string;
   name: string;
@@ -27,6 +35,19 @@ export interface LiveSessionParticipant {
   isMuted: boolean;
   isCameraOn: boolean;
   isSpeaking?: boolean;
+}
+
+export type LiveSessionType = "group" | "individual";
+
+export interface LiveSessionSeries {
+  id: string;
+  tenantId: string;
+  title: string;
+  sessionType: LiveSessionType;
+  recurrence: LiveSessionRecurrence;
+  courseId?: string;
+  groupId?: string;
+  studentId?: string;
 }
 
 export interface LiveSession {
@@ -44,5 +65,26 @@ export interface LiveSession {
   meetCode: string;
   topic: string;
   lessonId?: string;
+  sessionType: LiveSessionType;
+  seriesId?: string;
+  isException?: boolean;
+  recordingUrl?: string;
+  recordingPublished: boolean;
+  recurrence?: LiveSessionRecurrence;
   participants: LiveSessionParticipant[];
+}
+
+export interface LiveRecording {
+  id: string;
+  tenantId: string;
+  title: string;
+  description: string;
+  courseId?: string;
+  courseTitle?: string;
+  videoUrl: string;
+  durationMinutes: number;
+  published: boolean;
+  source: "session_replay" | "library";
+  liveSessionId?: string;
+  createdAt: string;
 }

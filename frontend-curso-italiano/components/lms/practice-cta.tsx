@@ -2,20 +2,23 @@
 
 import Link from "next/link";
 import { Dumbbell, Layers, MessageCircle, HelpCircle } from "lucide-react";
+import { getStudentLessonPracticeHref } from "@lms-mocks/course-routes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function PracticeCTA({
   tenantSlug,
   courseId,
-  lessonId,
+  moduleSlug,
+  lessonSlug,
   exerciseCount,
   flashcardCount = 0,
   simulatorCount = 0,
 }: {
   tenantSlug: string;
   courseId: string;
-  lessonId: string;
+  moduleSlug: string;
+  lessonSlug: string;
   exerciseCount: number;
   flashcardCount?: number;
   simulatorCount?: number;
@@ -50,7 +53,7 @@ export function PracticeCTA({
               )}
             </div>
           </div>
-          <Link href={`/${tenantSlug}/cursos/${courseId}/aulas/${lessonId}/praticar`}>
+          <Link href={getStudentLessonPracticeHref(tenantSlug, courseId, moduleSlug, lessonSlug)}>
             <Button size="lg">Ir para prática →</Button>
           </Link>
         </div>

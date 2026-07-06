@@ -1,10 +1,13 @@
-import type { Course, Grade, Tenant, WrittenAttempt } from "./types";
+import type { Course, Grade, StudentPlanTemplate, SupportConversation, Tenant, TenantAiConfig, WebhookEvent, WrittenAttempt } from "./types";
 import type { LessonPracticeSettings } from "./lesson-practice-types";
 import { courses as seedCourses } from "./courses";
+import { normalizeCourses } from "./course-slugs";
 import { defaultTenant, getDemoTenant } from "./tenant";
 import { initialGrades, initialWrittenAttempts, studentProfiles as seedStudents } from "./students";
 import { exercises as seedExercises } from "./exercises";
-
+import { seedPlanTemplates } from "./student-plan-templates";
+import { seedSupportConversations } from "./support-conversations";
+import { seedWebhookEvents } from "./integrations";
 const STORAGE_KEYS = {
   tenant: "lms_demo_tenant",
   tenants: "lms_demo_tenants",
@@ -17,7 +20,19 @@ const STORAGE_KEYS = {
   lessonPractice: "lms_demo_lesson_practice",
   exercises: "lms_demo_exercises",
   students: "lms_demo_students",
+  planTemplates: "lms_demo_plan_templates",
+  supportConversations: "lms_demo_support_conversations",
+  webhookEvents: "lms_demo_webhook_events",
+  aiConfig: (tenantId: string) => `lms_demo_ai_config_${tenantId}`,
 } as const;
+
+export const DEFAULT_TENANT_AI_CONFIG: TenantAiConfig = {
+  enabled: false,
+  apiKey: "",
+  baseUrl: "https://api.openai.com/v1",
+  model: "gpt-4o-mini",
+  lastValidatedAt: null,
+};
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -71,7 +86,7 @@ export function setStoredTenant(tenant: Tenant) {
 }
 
 export function getStoredCourses(): Course[] {
-  return readJson(STORAGE_KEYS.courses, seedCourses);
+  return normalizeCourses(readJson(STORAGE_KEYS.courses, seedCourses));
 }
 
 export function setStoredCourses(courses: Course[]) {
@@ -161,6 +176,30 @@ export function setStoredStudents(students: typeof seedStudents) {
   writeJson(STORAGE_KEYS.students, students);
 }
 
+export function getStoredPlanTemplates() {
+  return readJson(STORAGE_KEYS.planTemplates, seedPlanTemplates);
+}
+
+export function setStoredPlanTemplates(templates: StudentPlanTemplate[]) {
+  writeJson(STORAGE_KEYS.planTemplates, templates);
+}
+
+export function getStoredSupportConversations() {
+  return readJson(STORAGE_KEYS.supportConversations, seedSupportConversations);
+}
+
+export function setStoredSupportConversations(conversations: SupportConversation[]) {
+  writeJson(STORAGE_KEYS.supportConversations, conversations);
+}
+
+export function getStoredWebhookEvents() {
+  return readJson(STORAGE_KEYS.webhookEvents, seedWebhookEvents);
+}
+
+export function setStoredWebhookEvents(events: WebhookEvent[]) {
+  writeJson(STORAGE_KEYS.webhookEvents, events);
+}
+
 export type StoredLessonPracticeMap = Record<string, LessonPracticeSettings>;
 
 export function getStoredLessonPracticeMap(): StoredLessonPracticeMap {
@@ -175,6 +214,14 @@ export function setStoredLessonPractice(settings: LessonPracticeSettings) {
   const map = getStoredLessonPracticeMap();
   map[settings.lessonId] = settings;
   setStoredLessonPracticeMap(map);
+}
+
+export function getStoredAiConfig(tenantId: string): TenantAiConfig {
+  return readJson(STORAGE_KEYS.aiConfig(tenantId), DEFAULT_TENANT_AI_CONFIG);
+}
+
+export function setStoredAiConfig(tenantId: string, config: TenantAiConfig) {
+  writeJson(STORAGE_KEYS.aiConfig(tenantId), config);
 }
 
 export { STORAGE_KEYS };

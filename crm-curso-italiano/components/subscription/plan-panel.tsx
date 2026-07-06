@@ -1,12 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { BUSINESS_PLANS, CRM_MODULE_LABELS } from "@lms-mocks/business-plans";
 import type { BusinessPlanTier } from "@lms-mocks/types";
+import { getPlanDefinition } from "@lms-mocks/business-plans";
+import { useMockStore } from "@/lib/mock-store";
 import { useTenantPlan } from "@/lib/subscription/use-tenant-plan";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Check, CreditCard, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +31,26 @@ function formatPrice(value: number | null) {
 
 export function PlanPanel() {
   const { plan, usage, tenant } = useTenantPlan();
+  const { setTenant } = useMockStore();
+  const [upgradeTier, setUpgradeTier] = useState<BusinessPlanTier | null>(null);
+
+  function confirmUpgrade() {
+    if (!upgradeTier) return;
+    const def = getPlanDefinition(upgradeTier);
+    setTenant({
+      ...tenant,
+      subscription: {
+        ...tenant.subscription,
+        tier: upgradeTier,
+        status: "active",
+        maxStudents: def.maxStudents,
+        maxCourses: def.maxCourses,
+        modules: def.modules,
+        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      },
+    });
+    setUpgradeTier(null);
+  }
 
   return (
     <div className="space-y-8">
@@ -112,6 +143,9 @@ export function PlanPanel() {
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Comparativo de planos</h2>
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-4">
+          Simulação — sem cobrança real. Confirme para alterar o plano demo da escola.
+        </p>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {TIER_ORDER.map((tier) => {
             const def = BUSINESS_PLANS[tier];
@@ -136,8 +170,8 @@ export function PlanPanel() {
                     {def.maxCourses === null ? "Ilimitado" : `até ${def.maxCourses}`}
                   </p>
                   {!isCurrent && (
-                    <Button variant="outline" size="sm" className="w-full" disabled>
-                      Upgrade — Fase 2
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => setUpgradeTier(tier)}>
+                      Escolher plano
                     </Button>
                   )}
                 </CardContent>
@@ -145,14 +179,27 @@ export function PlanPanel() {
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-4">
-          Integração de pagamentos (Stripe/MP) — Fase 2. No demo, troque de perfil na tela de login
-          para experimentar cada plano.
-        </p>
-        <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }), "px-0 mt-2 h-auto")}>
+        <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }), "px-0 mt-4 h-auto")}>
           Trocar perfil demo
         </Link>
       </div>
+
+      <Dialog open={!!upgradeTier} onOpenChange={() => setUpgradeTier(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmar plano {upgradeTier ? BUSINESS_PLANS[upgradeTier].label : ""}</DialogTitle>
+            <DialogDescription>
+              Esta ação atualiza o plano da escola no modo demonstração. Nenhuma cobrança será feita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUpgradeTier(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmUpgrade}>Confirmar upgrade mock</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -35,7 +35,7 @@ import {
 
 export function StudentsPanel() {
   const router = useRouter();
-  const { students, courses, attempts, addStudent } = useMockStore();
+  const { students, courses, attempts, addStudent, planTemplates, tenant } = useMockStore();
   const { canAddStudent, studentLimitMessage, usage, plan } = useTenantPlan();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
@@ -184,7 +184,13 @@ export function StudentsPanel() {
         </div>
       )}
 
-      <StudentFormDialog open={formOpen} onOpenChange={setFormOpen} courses={courses} onSave={handleCreate} />
+      <StudentFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        courses={courses.filter((c) => c.tenantId === tenant.id)}
+        planTemplates={planTemplates.filter((t) => t.tenantId === tenant.id && t.active)}
+        onSave={handleCreate}
+      />
     </div>
   );
 }

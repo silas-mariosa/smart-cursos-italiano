@@ -2,23 +2,42 @@
 
 import Link from "next/link";
 import { BookOpen, Dumbbell, Video } from "lucide-react";
+import {
+  getStudentLessonHref,
+  getStudentLessonPracticeHref,
+} from "@lms-mocks/course-routes";
 import { cn } from "@/lib/utils";
 
 type LessonNavProps = {
   tenantSlug: string;
   courseId: string;
-  lessonId: string;
+  moduleSlug: string;
+  lessonSlug: string;
   active: "conteudo" | "praticar";
   hasPractice?: boolean;
 };
 
-export function LessonNav({ tenantSlug, courseId, lessonId, active, hasPractice = true }: LessonNavProps) {
-  const base = `/${tenantSlug}/cursos/${courseId}/aulas/${lessonId}`;
+export function LessonNav({
+  tenantSlug,
+  courseId,
+  moduleSlug,
+  lessonSlug,
+  active,
+  hasPractice = true,
+}: LessonNavProps) {
+  const base = getStudentLessonHref(tenantSlug, courseId, moduleSlug, lessonSlug);
 
   const tabs = [
     { id: "conteudo" as const, label: "Conteúdo", icon: BookOpen, href: base },
     ...(hasPractice
-      ? [{ id: "praticar" as const, label: "Praticar", icon: Dumbbell, href: `${base}/praticar` }]
+      ? [
+          {
+            id: "praticar" as const,
+            label: "Praticar",
+            icon: Dumbbell,
+            href: getStudentLessonPracticeHref(tenantSlug, courseId, moduleSlug, lessonSlug),
+          },
+        ]
       : []),
   ];
 

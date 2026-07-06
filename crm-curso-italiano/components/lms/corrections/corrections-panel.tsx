@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useMockStore } from "@/lib/mock-store";
+import { useTenantPlan } from "@/lib/subscription/use-tenant-plan";
 import {
   filterAttempts,
   formatRelativeTime,
@@ -27,9 +28,11 @@ import {
 
 export function CorrectionsPanel() {
   const { attempts, courses, refreshAttempts } = useMockStore();
+  const { canUseAiGeneration, hasAiGenerationModule } = useTenantPlan();
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [tab, setTab] = useState<CorrectionFilter>("pending");
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
 
   useEffect(() => {
     refreshAttempts();
@@ -48,6 +51,12 @@ export function CorrectionsPanel() {
     () => filterAttempts(attempts, search, tab, courseFilter),
     [attempts, search, tab, courseFilter],
   );
+
+  function handleAiSuggestion() {
+    if (!canUseAiGeneration) return;
+    setAiMessage("Sugestão simulada — conecte o backend na Fase 2.");
+    setTimeout(() => setAiMessage(null), 4000);
+  }
 
   return (
     <div className="space-y-8">
@@ -164,17 +173,47 @@ export function CorrectionsPanel() {
           <div>
             <p className="font-medium text-sm flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
-              Sugestão de nota com IA — Fase 2
+              Sugestão de nota com IA
+              {!hasAiGenerationModule && (
+                <Badge variant="outline" className="text-[10px]">
+                  Fase 2
+                </Badge>
+              )}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Em breve: rascunho de feedback e nota sugerida com base no enunciado e na resposta.
+              {hasAiGenerationModule
+                ? "Rascunho de feedback e nota sugerida com base no enunciado e na resposta."
+                : "Em breve: disponível no plano Pro ou superior com integração ChatGPT."}
             </p>
+            {aiMessage && <p className="text-xs text-emerald-600 mt-2">{aiMessage}</p>}
           </div>
-          <Link href="/dashboard/exercicios">
-            <Button variant="outline" size="sm">
-              Ver exercícios de redação
-            </Button>
-          </Link>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {hasAiGenerationModule ? (
+              canUseAiGeneration ? (
+                <Button variant="outline" size="sm" onClick={handleAiSuggestion}>
+                  <Sparkles className="size-4 mr-2" />
+                  Gerar sugestão
+                </Button>
+              ) : (
+                <Link href="/dashboard/configuracao">
+                  <Button variant="outline" size="sm">
+                    Configurar ChatGPT
+                  </Button>
+                </Link>
+              )
+            ) : (
+              <Link href="/dashboard/plano">
+                <Button variant="outline" size="sm">
+                  Ver planos
+                </Button>
+              </Link>
+            )}
+            <Link href="/dashboard/exercicios">
+              <Button variant="outline" size="sm">
+                Ver exercícios de redação
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
