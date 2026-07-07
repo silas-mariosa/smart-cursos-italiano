@@ -103,7 +103,7 @@ export default function LessonPlayerPage() {
             </p>
             <h1 className="font-semibold truncate">{lesson.title}</h1>
           </div>
-          <Badge variant="secondary">{lesson.durationMinutes} min</Badge>
+          <Badge variant="secondary" className="shrink-0 hidden sm:inline-flex">{lesson.durationMinutes} min</Badge>
         </div>
 
         <LessonNav

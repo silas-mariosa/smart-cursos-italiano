@@ -102,11 +102,11 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6 flex items-center gap-3">
-            <BookOpen className="size-8 text-primary" />
-            <div>
+            <BookOpen className="size-8 text-primary shrink-0" />
+            <div className="min-w-0">
               <p className="text-2xl font-bold">{enrolledCourses.length}</p>
               <p className="text-xs text-muted-foreground">Cursos</p>
             </div>
@@ -114,8 +114,8 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardContent className="pt-6 flex items-center gap-3">
-            <PlayCircle className="size-8 text-primary" />
-            <div>
+            <PlayCircle className="size-8 text-primary shrink-0" />
+            <div className="min-w-0">
               <p className="text-2xl font-bold">{progress.completedLessonIds.length}</p>
               <p className="text-xs text-muted-foreground">Aulas concluídas</p>
             </div>
@@ -123,8 +123,8 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardContent className="pt-6 flex items-center gap-3">
-            <Flame className="size-8 text-orange-500" />
-            <div>
+            <Flame className="size-8 text-orange-500 shrink-0" />
+            <div className="min-w-0">
               <p className="text-2xl font-bold">3</p>
               <p className="text-xs text-muted-foreground">Dias seguidos</p>
             </div>
@@ -160,12 +160,12 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {studentGrades.map((g) => (
               <Card key={g.id}>
-                <CardContent className="py-4 flex items-center justify-between">
-                  <div>
+                <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm">{g.title}</p>
                     <p className="text-xs text-muted-foreground">{g.feedback}</p>
                   </div>
-                  <Badge variant={g.score >= 80 ? "success" : "secondary"}>
+                  <Badge variant={g.score >= 80 ? "success" : "secondary"} className="shrink-0 self-start sm:self-center">
                     {g.score}/{g.maxScore}
                   </Badge>
                 </CardContent>

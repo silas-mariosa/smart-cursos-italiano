@@ -16,6 +16,7 @@ import { getSimulatorByLesson } from "@lms-mocks/simulator";
 import { resolveLessonPractice } from "@lms-mocks/lesson-practice";
 import { useMockStore, getCourseFromStore } from "@/lib/mock-store";
 import { LessonPreviewHeader } from "@/components/lms/course-editor/lesson-preview-header";
+import { CourseEditorMobileEditTrigger } from "@/components/lms/course-editor/course-editor-mobile-edit-trigger";
 import { LessonContentPlayer } from "@/components/lms/course-preview/lesson-content-player";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -109,9 +110,9 @@ export default function LessonPreviewPage() {
             ) : (
               <div />
             )}
-            <Link href={getCrmLessonEditHref(courseId, mod.slug, lesson.slug)}>
-              <Button>Editar conteúdo</Button>
-            </Link>
+            <CourseEditorMobileEditTrigger href={getCrmLessonEditHref(courseId, mod.slug, lesson.slug)}>
+              Editar conteúdo
+            </CourseEditorMobileEditTrigger>
             {nextCtx ? (
               <Link
                 href={getCrmLessonHref(

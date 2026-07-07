@@ -71,16 +71,16 @@ export function FlashcardPlayer({ cards }: { cards: Flashcard[] }) {
         )}
       </button>
 
-      <div className="flex items-center justify-between gap-3">
-        <Button variant="outline" size="icon" onClick={prev}>
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <Button variant="outline" size="icon" onClick={prev} className="shrink-0">
           <ChevronLeft className="size-4" />
         </Button>
-        <Button variant="outline" onClick={() => setFlipped(false)}>
+        <Button variant="outline" onClick={() => setFlipped(false)} className="shrink-0">
           <RotateCcw className="size-4 mr-2" />
           Virar
         </Button>
-        <Button onClick={markKnown}>Sei ✓</Button>
-        <Button variant="outline" size="icon" onClick={next}>
+        <Button onClick={markKnown} className="shrink-0">Sei ✓</Button>
+        <Button variant="outline" size="icon" onClick={next} className="shrink-0">
           <ChevronRight className="size-4" />
         </Button>
       </div>

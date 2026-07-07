@@ -7,6 +7,7 @@ import { useMockStore } from "@/lib/mock-store";
 import { countLessons } from "@lms-mocks/courses";
 import { getCrmDefaultLessonHref, getCrmCoursePreviewHref, getCrmCourseMetricsHref } from "@lms-mocks/course-routes";
 import { getCourseAnalytics } from "@/lib/course-analytics";
+import { CourseEditorMobileEditTrigger } from "@/components/lms/course-editor/course-editor-mobile-edit-trigger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -115,11 +116,13 @@ export default function CoursesListPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link href={getCrmDefaultLessonHref(course)}>
-                    <Button variant="outline" size="sm">
-                      Editar
-                    </Button>
-                  </Link>
+                  <CourseEditorMobileEditTrigger
+                    href={getCrmDefaultLessonHref(course)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Editar
+                  </CourseEditorMobileEditTrigger>
                   <Link href={getCrmCoursePreviewHref(course.id)}>
                     <Button variant="outline" size="sm">
                       Visualizar

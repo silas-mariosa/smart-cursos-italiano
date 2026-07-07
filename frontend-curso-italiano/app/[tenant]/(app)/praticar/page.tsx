@@ -60,18 +60,21 @@ export default function PracticeHubPage() {
                   const fcCount = getFlashcardsByLesson(lesson.id).length;
                   return (
                     <Card key={lesson.id}>
-                      <CardContent className="py-4 flex items-center justify-between gap-4">
-                        <div>
+                      <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="min-w-0 flex-1">
                           <p className="text-xs text-muted-foreground">{mod.title}</p>
                           <p className="font-medium">{lesson.title}</p>
-                          <div className="flex gap-2 mt-2">
+                          <div className="flex flex-wrap gap-2 mt-2">
                             <Badge variant="outline">{exCount} quizzes</Badge>
                             <Badge variant="outline">{fcCount} flashcards</Badge>
                             <Badge variant="outline">Simulador</Badge>
                           </div>
                         </div>
-                        <Link href={getStudentLessonPracticeHref(tenantSlug, course.id, mod.slug, lesson.slug)}>
-                          <Button>Praticar</Button>
+                        <Link
+                          href={getStudentLessonPracticeHref(tenantSlug, course.id, mod.slug, lesson.slug)}
+                          className="w-full sm:w-auto shrink-0"
+                        >
+                          <Button className="w-full sm:w-auto">Praticar</Button>
                         </Link>
                       </CardContent>
                     </Card>

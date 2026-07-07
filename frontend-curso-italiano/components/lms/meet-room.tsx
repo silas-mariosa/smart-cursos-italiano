@@ -60,11 +60,11 @@ export function MeetRoom({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden min-h-0">
         {/* Main video area */}
-        <div className="flex-1 flex flex-col p-3 gap-3 min-w-0">
+        <div className="flex-1 flex flex-col p-3 gap-3 min-w-0 min-h-0">
           {/* Professor em destaque */}
-          <div className="flex-1 relative rounded-xl overflow-hidden bg-[#3c4043] min-h-[200px]">
+          <div className="flex-1 relative rounded-xl overflow-hidden bg-[#3c4043] min-h-[140px] sm:min-h-[200px]">
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#3c4043] to-[#2d2f31]">
               <Avatar className="size-24">
                 <AvatarFallback className="text-2xl bg-primary">{teacher?.avatar ?? "MR"}</AvatarFallback>
@@ -84,7 +84,7 @@ export function MeetRoom({
           </div>
 
           {/* Grid de participantes */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 h-28 sm:h-32 shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-36 overflow-y-auto shrink-0">
             {/* Você */}
             <div className="relative rounded-lg overflow-hidden bg-[#3c4043] flex items-center justify-center">
               {cameraOn ? (
@@ -119,9 +119,9 @@ export function MeetRoom({
           </div>
         </div>
 
-        {/* Chat lateral */}
+        {/* Chat lateral — metade inferior no mobile, lateral no desktop */}
         {chatOpen && (
-          <aside className="w-80 border-l border-white/10 flex flex-col bg-[#2d2e30] shrink-0">
+          <aside className="h-[45%] md:h-auto md:w-80 border-t md:border-t-0 md:border-l border-white/10 flex flex-col bg-[#2d2e30] shrink-0 min-h-0">
             <div className="p-3 border-b border-white/10 font-medium text-sm">Chat da aula</div>
             <div className="flex-1 p-3 space-y-3 overflow-y-auto text-sm">
               <div>
@@ -144,12 +144,12 @@ export function MeetRoom({
       </div>
 
       {/* Toolbar inferior — Google Meet */}
-      <footer className="px-4 py-3 bg-[#202124] border-t border-white/10 flex items-center justify-center gap-2 shrink-0">
-        <div className="flex items-center gap-1 sm:gap-2">
+      <footer className="relative px-2 sm:px-4 py-3 bg-[#202124] border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 shrink-0">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
           <Button
             size="icon"
             variant="ghost"
-            className={cn("rounded-full size-11", muted ? "bg-[#ea4335] hover:bg-[#ea4335]/90 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
+            className={cn("rounded-full size-10 sm:size-11", muted ? "bg-[#ea4335] hover:bg-[#ea4335]/90 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
             onClick={() => setMuted(!muted)}
           >
             {muted ? <MicOff className="size-5" /> : <Mic className="size-5" />}
@@ -157,18 +157,18 @@ export function MeetRoom({
           <Button
             size="icon"
             variant="ghost"
-            className={cn("rounded-full size-11", !cameraOn ? "bg-[#ea4335] hover:bg-[#ea4335]/90 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
+            className={cn("rounded-full size-10 sm:size-11", !cameraOn ? "bg-[#ea4335] hover:bg-[#ea4335]/90 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
             onClick={() => setCameraOn(!cameraOn)}
           >
             {cameraOn ? <Video className="size-5" /> : <VideoOff className="size-5" />}
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
+          <Button size="icon" variant="ghost" className="rounded-full size-10 sm:size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
             <Monitor className="size-5" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className={cn("rounded-full size-11", handRaised ? "bg-yellow-600 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
+            className={cn("rounded-full size-10 sm:size-11", handRaised ? "bg-yellow-600 text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
             onClick={() => setHandRaised(!handRaised)}
           >
             <Hand className="size-5" />
@@ -176,20 +176,20 @@ export function MeetRoom({
           <Button
             size="icon"
             variant="ghost"
-            className={cn("rounded-full size-11", chatOpen ? "bg-primary text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
+            className={cn("rounded-full size-10 sm:size-11", chatOpen ? "bg-primary text-white" : "bg-[#3c4043] hover:bg-[#4a4d51] text-white")}
             onClick={() => setChatOpen(!chatOpen)}
           >
             <MessageSquare className="size-5" />
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
+          <Button size="icon" variant="ghost" className="rounded-full size-10 sm:size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
             <Settings className="size-5" />
           </Button>
-          <Button size="icon" variant="ghost" className="rounded-full size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
+          <Button size="icon" variant="ghost" className="rounded-full size-10 sm:size-11 bg-[#3c4043] hover:bg-[#4a4d51] text-white hidden sm:flex">
             <MoreVertical className="size-5" />
           </Button>
         </div>
-        <Link href={`/${tenantSlug}/ao-vivo/${session.id}`} className="absolute right-4">
-          <Button className="rounded-full bg-[#ea4335] hover:bg-[#ea4335]/90 text-white px-6">
+        <Link href={`/${tenantSlug}/ao-vivo/${session.id}`} className="w-full sm:w-auto sm:absolute sm:right-4">
+          <Button className="w-full sm:w-auto rounded-full bg-[#ea4335] hover:bg-[#ea4335]/90 text-white px-6">
             <PhoneOff className="size-4 mr-2" />
             Sair
           </Button>

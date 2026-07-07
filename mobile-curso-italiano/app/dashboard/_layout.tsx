@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Stack, useRouter } from "expo-router";
 
+import { AppShell } from "@/components/layout/AppShell";
+import { SidebarProvider } from "@/context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardLayout() {
@@ -13,5 +15,11 @@ export default function DashboardLayout() {
     }
   }, [loading, token, router]);
 
-  return <Stack screenOptions={{ headerShown: true, title: "Dashboard" }} />;
+  return (
+    <SidebarProvider>
+      <AppShell>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppShell>
+    </SidebarProvider>
+  );
 }

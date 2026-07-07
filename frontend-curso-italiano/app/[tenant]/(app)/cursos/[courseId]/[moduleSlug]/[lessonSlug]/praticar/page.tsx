@@ -126,7 +126,7 @@ export default function LessonPracticePage() {
             </p>
             <h1 className="font-semibold truncate">Prática — {lesson.title}</h1>
           </div>
-          <Badge>Praticar</Badge>
+          <Badge className="shrink-0 hidden sm:inline-flex">Praticar</Badge>
         </div>
 
         <LessonNav
@@ -149,22 +149,22 @@ export default function LessonPracticePage() {
 
             <Tabs defaultValue={tabDefault} className="w-full">
               {tabCount > 1 && (
-                <TabsList className={cn("w-full grid", tabCount === 2 ? "grid-cols-2" : "grid-cols-3")}>
+                <TabsList className={cn("w-full grid h-auto", tabCount === 2 ? "grid-cols-2" : "grid-cols-3")}>
                   {showQuizzes && (
-                    <TabsTrigger value="quizzes" className="gap-2">
-                      <HelpCircle className="size-4" />
+                    <TabsTrigger value="quizzes" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                      <HelpCircle className="size-4 hidden sm:inline" />
                       Quizzes
                     </TabsTrigger>
                   )}
                   {showFlashcards && (
-                    <TabsTrigger value="flashcards" className="gap-2">
-                      <Layers className="size-4" />
+                    <TabsTrigger value="flashcards" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                      <Layers className="size-4 hidden sm:inline" />
                       Flashcards
                     </TabsTrigger>
                   )}
                   {showSimulator && (
-                    <TabsTrigger value="simulador" className="gap-2">
-                      <MessageCircle className="size-4" />
+                    <TabsTrigger value="simulador" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+                      <MessageCircle className="size-4 hidden sm:inline" />
                       Simulador
                     </TabsTrigger>
                   )}

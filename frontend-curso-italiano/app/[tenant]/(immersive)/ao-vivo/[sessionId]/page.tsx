@@ -114,7 +114,7 @@ export default function LiveLobbyPage() {
                 <p className="text-sm">
                   <strong>Tópico:</strong> {session.topic}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Clock className="size-4" />
                     {countdown === "A aula começou!" ? (

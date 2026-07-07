@@ -135,7 +135,7 @@ export function CourseOverviewView({
                             mod.slug,
                             lesson.slug,
                           )}
-                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent"
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent min-w-0"
                         >
                           {done ? (
                             <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
@@ -144,8 +144,8 @@ export function CourseOverviewView({
                           ) : (
                             <Circle className="size-4 shrink-0 opacity-40" />
                           )}
-                          <span className="flex-1">{lesson.title}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="flex-1 min-w-0 truncate">{lesson.title}</span>
+                          <span className="text-xs text-muted-foreground shrink-0">
                             {lesson.durationMinutes} min
                           </span>
                           {lesson.status === "draft" && (

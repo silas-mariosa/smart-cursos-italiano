@@ -55,7 +55,7 @@ export function StudentShell({
         <ImmersiveBackHeader href={courseBack.href} label={courseBack.label} />
       ) : (
         <header className="border-b bg-background">
-          <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 gap-4">
+          <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
             <Link href={`/${tenantSlug}/dashboard`} className="flex items-center gap-2 font-semibold shrink-0">
               <div
                 className="flex size-8 items-center justify-center rounded-md text-white text-xs font-bold"
@@ -63,10 +63,10 @@ export function StudentShell({
               >
                 SI
               </div>
-              <span className="hidden sm:inline">{tenant.name}</span>
+              <span className="hidden sm:inline truncate max-w-[8rem] md:max-w-none">{tenant.name}</span>
             </Link>
 
-            <nav className="flex items-center gap-1">
+            <nav className="flex flex-1 items-center justify-center gap-0.5 sm:gap-1 min-w-0 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {nav.map((item) => {
                 const Icon = item.icon;
                 const active = pathname.startsWith(item.href);
@@ -74,8 +74,9 @@ export function StudentShell({
                   <Link
                     key={item.href}
                     href={item.href}
+                    title={item.label}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                      "flex items-center gap-1.5 px-2 py-1.5 sm:px-3 rounded-md text-sm transition-colors shrink-0",
                       active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground hover:bg-accent",
                     )}
                   >
@@ -91,7 +92,7 @@ export function StudentShell({
               })}
             </nav>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <Link href={`/${tenantSlug}/minha-conta`} className="flex items-center gap-2 text-sm hover:opacity-80" title="Minha conta">
                 <UserCircle className="size-5 md:hidden text-muted-foreground" />
                 <Avatar className="size-8 hidden md:flex">
@@ -99,7 +100,7 @@ export function StudentShell({
                 </Avatar>
                 <span className="hidden lg:inline text-sm">{persona?.name?.split(" ")[0]}</span>
               </Link>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout} aria-label="Sair">
                 <LogOut className="size-4" />
               </Button>
             </div>

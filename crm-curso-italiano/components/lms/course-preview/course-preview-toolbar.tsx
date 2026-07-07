@@ -84,7 +84,7 @@ export function CourseMetricsToolbar({ course, className }: CourseMetricsToolbar
     <div className={cn("rounded-xl border bg-card shadow-sm", className)}>
       <div className="flex flex-col gap-3 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <Link href={getCrmDefaultLessonHref(course)}>
+          <Link href="/dashboard/cursos">
             <Button variant="ghost" size="sm" className="shrink-0">
               <ArrowLeft className="mr-1 size-4" />
               Voltar ao curso

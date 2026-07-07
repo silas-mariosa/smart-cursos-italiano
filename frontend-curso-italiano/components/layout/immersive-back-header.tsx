@@ -15,10 +15,10 @@ export function ImmersiveBackHeader({
       <div className="flex h-10 items-center px-4">
         <Link
           href={href}
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 gap-1")}
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-ml-2 gap-1 max-w-full")}
         >
-          <ChevronLeft className="size-4" />
-          {label}
+          <ChevronLeft className="size-4 shrink-0" />
+          <span className="truncate">{label}</span>
         </Link>
       </div>
     </header>
