@@ -111,7 +111,7 @@ export default function LiveSessionManagePage() {
               ← Aulas ao vivo
             </Link>
             <span className="text-muted-foreground text-xs">·</span>
-            <Link href="/dashboard/ao-vivo/calendario" className="text-xs text-primary hover:underline">
+            <Link href="/dashboard/calendario" className="text-xs text-primary hover:underline">
               Calendário
             </Link>
           </div>

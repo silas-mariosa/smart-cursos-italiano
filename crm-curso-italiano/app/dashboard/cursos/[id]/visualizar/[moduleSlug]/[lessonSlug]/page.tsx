@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { getLessonById, getNextLesson, getPrevLesson } from "@lms-mocks/courses";
 import { getLessonBySlugs } from "@lms-mocks/course-slugs";
 import {
-  getCrmCoursePreviewHref,
   getCrmLessonPreviewPlayerHref,
   getCrmLessonPreviewPracticeHref,
 } from "@lms-mocks/course-routes";
@@ -26,7 +25,6 @@ import { cn } from "@/lib/utils";
 
 export default function CoursePreviewLessonPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params.id as string;
   const moduleSlug = params.moduleSlug as string;
   const lessonSlug = params.lessonSlug as string;
@@ -45,7 +43,6 @@ export default function CoursePreviewLessonPage() {
   const prevCtx = prev ? getLessonById(courseId, prev.id, [course]) : undefined;
   const nextCtx = next ? getLessonById(courseId, next.id, [course]) : undefined;
   const pageBuilder = isPageBuilderLesson(lesson);
-  const previewBase = getCrmCoursePreviewHref(courseId);
 
   const exerciseIds = getLessonExerciseIds(lesson);
   const practice = resolveLessonPractice(lessonId);
@@ -57,16 +54,10 @@ export default function CoursePreviewLessonPage() {
   const sidebar = <CoursePreviewSidebar course={course} courseId={courseId} currentLessonId={lessonId} />;
 
   return (
-    <div className="space-y-4">
-      <CoursePreviewToolbar
-        course={course}
-        activeTab="conteudo"
-        onTabChange={(tab) => {
-          if (tab === "alunos") router.push(`${previewBase}?tab=alunos`);
-        }}
-      />
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <CoursePreviewToolbar course={course} primaryAction="back" />
 
-      <div className="flex h-[calc(100vh-12rem)] border rounded-xl overflow-hidden bg-background">
+      <div className="flex min-h-0 flex-1 overflow-hidden border-t bg-background">
         <aside className="hidden lg:block w-72 shrink-0">{sidebar}</aside>
 
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -132,9 +123,6 @@ export default function CoursePreviewLessonPage() {
                 ) : (
                   <div />
                 )}
-                <Link href={`${previewBase}?tab=alunos`}>
-                  <Button variant="outline">Ver alunos e métricas</Button>
-                </Link>
                 {nextCtx ? (
                   <Link
                     href={getCrmLessonPreviewPlayerHref(

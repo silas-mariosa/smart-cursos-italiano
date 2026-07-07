@@ -1,10 +1,17 @@
 import type { Course } from "./types";
 import { getLessonByIdInCourses } from "./course-slugs";
+import { getFirstLessonInCourse } from "./courses";
 
 export type CrmLessonEditorMode = "conteudo" | "praticar";
 
 export function getCrmCourseHref(courseId: string): string {
   return `/dashboard/cursos/${courseId}`;
+}
+
+export function getCrmDefaultLessonHref(course: Course): string {
+  const ctx = getFirstLessonInCourse(course);
+  if (!ctx) return getCrmCourseHref(course.id);
+  return getCrmLessonHref(course.id, ctx.module.slug, ctx.lesson.slug);
 }
 
 export function getCrmModuleHref(courseId: string, moduleSlug: string): string {
@@ -44,6 +51,10 @@ export function getCrmLessonPreviewHref(
 
 export function getCrmCoursePreviewHref(courseId: string): string {
   return `/dashboard/cursos/${courseId}/visualizar`;
+}
+
+export function getCrmCourseMetricsHref(courseId: string): string {
+  return `/dashboard/cursos/${courseId}/metricas`;
 }
 
 export function getCrmLessonPreviewPlayerHref(
@@ -112,7 +123,7 @@ const CRM_LESSON_PREVIEW_PATTERN =
 const CRM_LEGACY_LESSON_PATTERN =
   /^\/dashboard\/cursos\/[^/]+\/aulas\/[^/]+(\/praticar)?(\/pre-visualizar)?$/;
 const CRM_COURSE_SHELL_PATTERN = /^\/dashboard\/cursos\/([^/]+)(?:\/(.*))?$/;
-const RESERVED_COURSE_CHILD_SEGMENTS = new Set(["visualizar", "aulas"]);
+const RESERVED_COURSE_CHILD_SEGMENTS = new Set(["visualizar", "aulas", "metricas"]);
 
 export function isCourseEditorShellPath(pathname: string): boolean {
   const match = pathname.match(CRM_COURSE_SHELL_PATTERN);
@@ -120,6 +131,17 @@ export function isCourseEditorShellPath(pathname: string): boolean {
   const rest = match[2];
   if (!rest) return true;
   const firstChild = rest.split("/")[0];
+  return !RESERVED_COURSE_CHILD_SEGMENTS.has(firstChild);
+}
+
+/** Rotas do curso em tela cheia — sem sidebar/header do painel CRM */
+export function isCrmCourseWorkspacePath(pathname: string): boolean {
+  const match = pathname.match(CRM_COURSE_SHELL_PATTERN);
+  if (!match) return false;
+  const rest = match[2];
+  if (!rest) return true;
+  const firstChild = rest.split("/")[0];
+  if (firstChild === "visualizar" || firstChild === "metricas") return true;
   return !RESERVED_COURSE_CHILD_SEGMENTS.has(firstChild);
 }
 

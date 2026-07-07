@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CrmModule } from "@lms-mocks/types";
 import {
   BookOpen,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
@@ -26,7 +27,7 @@ import { DemoBanner } from "@/components/demo-banner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { isCourseEditorShellPath, isLessonEditorPath } from "@/lib/editor-routes";
+import { isCrmCourseWorkspacePath, isLessonEditorPath } from "@/lib/editor-routes";
 
 const SIDEBAR_COLLAPSED_KEY = "crm-sidebar-collapsed";
 
@@ -43,6 +44,7 @@ const baseNav: NavItem[] = [
   { href: "/dashboard", label: "Visão geral", icon: LayoutDashboard, module: "overview" },
   { href: "/dashboard/cursos", label: "Meus cursos", icon: BookOpen, module: "courses" },
   { href: "/dashboard/ao-vivo", label: "Ao vivo", icon: Video, module: "live" },
+  { href: "/dashboard/calendario", label: "Calendário", icon: Calendar, module: "live" },
   { href: "/dashboard/praticar", label: "Prática", icon: Dumbbell, module: "practice" },
   { href: "/dashboard/exercicios", label: "Banco de questões", icon: HelpCircle, module: "exerciseBank" },
   { href: "/dashboard/simulados", label: "Simulados", icon: ClipboardList, module: "mockExams" },
@@ -90,7 +92,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     );
   }, [persona?.role, canAccessModule, canAccessConfiguration]);
 
-  const isCourseEditorShell = isCourseEditorShellPath(pathname);
+  const isCourseWorkspace = isCrmCourseWorkspacePath(pathname);
   const isLessonEditor = isLessonEditorPath(pathname);
   const activeHref = getActiveNavHref(pathname, navItems);
   const [collapsed, setCollapsed] = useState(false);
@@ -124,7 +126,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen flex-col overflow-hidden">
       <DemoBanner />
       <div className="flex flex-1 min-h-0">
-        {!isCourseEditorShell && (
+        {!isCourseWorkspace && (
         <aside
           className={cn(
             "flex shrink-0 flex-col border-r bg-muted/20 transition-[width] duration-300",
@@ -220,7 +222,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </aside>
         )}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
-          {!isCourseEditorShell && (
+          {!isCourseWorkspace && (
             <header className="border-b px-6 py-4 font-medium text-sm text-muted-foreground shrink-0">
               Painel {persona?.role === "admin" ? "administrativo" : "do professor"}
             </header>
@@ -228,7 +230,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <main
             className={cn(
               "flex-1 min-h-0",
-              isCourseEditorShell ? "flex flex-col overflow-hidden" : "p-6 overflow-auto",
+              isCourseWorkspace ? "flex flex-col overflow-hidden" : "p-6 overflow-auto",
             )}
           >
             {children}

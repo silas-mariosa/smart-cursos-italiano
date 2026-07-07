@@ -8,6 +8,7 @@ import {
   getCrmCourseHref,
   getCrmCoursePreviewHref,
   getCrmLessonHref,
+  getCrmLessonPreviewPlayerHref,
 } from "@lms-mocks/course-routes";
 import { useMockStore } from "@/lib/mock-store";
 import { layoutTemplateToBlocks } from "@/lib/page-builder/lesson-layout";
@@ -23,6 +24,7 @@ type CourseEditorSidebarProps = {
   courseId: string;
   activeModuleSlug?: string;
   activeLessonSlug?: string;
+  previewMode?: boolean;
 };
 
 export function CourseEditorSidebar({
@@ -30,6 +32,7 @@ export function CourseEditorSidebar({
   courseId,
   activeModuleSlug,
   activeLessonSlug,
+  previewMode = false,
 }: CourseEditorSidebarProps) {
   const { addLesson, addModule } = useMockStore();
   const [newModuleTitle, setNewModuleTitle] = useState("");
@@ -56,6 +59,12 @@ export function CourseEditorSidebar({
     setNewModuleTitle("");
   }
 
+  function lessonLink(moduleSlug: string, lessonSlug: string) {
+    return previewMode
+      ? getCrmLessonPreviewPlayerHref(courseId, moduleSlug, lessonSlug)
+      : getCrmLessonHref(courseId, moduleSlug, lessonSlug);
+  }
+
   return (
     <>
       <div className="flex h-full w-72 shrink-0 flex-col border-r bg-background">
@@ -68,7 +77,12 @@ export function CourseEditorSidebar({
           <Badge className="bg-emerald-600 hover:bg-emerald-600">
             {course.status === "published" ? "Publicado" : "Rascunho"}
           </Badge>
-          <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
+          <Button
+            variant={previewMode ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-xs"
+            asChild
+          >
             <Link href={getCrmCoursePreviewHref(courseId)}>
               <Eye className="mr-1 size-3.5" />
               Visualizar
@@ -87,7 +101,7 @@ export function CourseEditorSidebar({
                 className={cn(isActiveModule && !activeLessonSlug && "rounded-lg bg-muted/40 p-1")}
               >
                 <Link
-                  href={getCrmCourseHref(courseId)}
+                  href={previewMode ? getCrmCoursePreviewHref(courseId) : getCrmCourseHref(courseId)}
                   className="block px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
                 >
                   {mod.title}
@@ -99,7 +113,7 @@ export function CourseEditorSidebar({
                     return (
                       <li key={lesson.id}>
                         <Link
-                          href={getCrmLessonHref(courseId, mod.slug, lesson.slug)}
+                          href={lessonLink(mod.slug, lesson.slug)}
                           className={cn(
                             "flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors",
                             active ? "bg-primary text-primary-foreground" : "hover:bg-accent",

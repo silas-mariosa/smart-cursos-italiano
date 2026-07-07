@@ -78,7 +78,7 @@ export default function LiveRecordingsPage() {
             <Link href="/dashboard/ao-vivo">Sessões</Link>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/ao-vivo/calendario">Calendário</Link>
+            <Link href="/dashboard/calendario">Calendário</Link>
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

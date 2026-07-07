@@ -1,10 +1,12 @@
 import {
   getCrmCourseHref,
+  getCrmDefaultLessonHref,
   getCrmLessonEditHref,
   getCrmLessonHref,
   getCrmLessonPreviewHref,
   getCrmModuleHref,
   isCourseEditorShellPath,
+  isCrmCourseWorkspacePath,
   isLessonEditorPath,
   type CrmLessonEditorMode,
 } from "@lms-mocks/course-routes";
@@ -13,11 +15,13 @@ import { getLessonByIdInCourses } from "@lms-mocks/course-slugs";
 
 export {
   getCrmCourseHref,
+  getCrmDefaultLessonHref,
   getCrmModuleHref,
   getCrmLessonHref,
   getCrmLessonEditHref,
   getCrmLessonPreviewHref,
   isCourseEditorShellPath,
+  isCrmCourseWorkspacePath,
   isLessonEditorPath,
 };
 export type { CrmLessonEditorMode };

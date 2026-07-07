@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMockStore } from "@/lib/mock-store";
 import { countLessons } from "@lms-mocks/courses";
+import { getCrmDefaultLessonHref, getCrmCoursePreviewHref, getCrmCourseMetricsHref } from "@lms-mocks/course-routes";
 import { getCourseAnalytics } from "@/lib/course-analytics";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -113,15 +114,20 @@ export default function CoursesListPage() {
                       : "—"}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Link href={`/dashboard/cursos/${course.id}`}>
+                <div className="flex flex-wrap gap-2">
+                  <Link href={getCrmDefaultLessonHref(course)}>
                     <Button variant="outline" size="sm">
                       Editar
                     </Button>
                   </Link>
-                  <Link href={`/dashboard/cursos/${course.id}/visualizar`}>
-                    <Button variant="ghost" size="sm">
+                  <Link href={getCrmCoursePreviewHref(course.id)}>
+                    <Button variant="outline" size="sm">
                       Visualizar
+                    </Button>
+                  </Link>
+                  <Link href={getCrmCourseMetricsHref(course.id)}>
+                    <Button variant="ghost" size="sm">
+                      Alunos e métricas
                     </Button>
                   </Link>
                 </div>

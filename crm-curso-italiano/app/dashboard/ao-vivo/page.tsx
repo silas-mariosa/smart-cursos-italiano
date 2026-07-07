@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Calendar, Clock, Plus, Repeat, Users, Video } from "lucide-react";
+import { Plus, Repeat, Video } from "lucide-react";
 import { useMockStore } from "@/lib/mock-store";
 import { getStudentGroupsForCourse } from "@lms-mocks/student-groups";
 import type { LiveSessionRecurrenceUnit } from "@lms-mocks/practice-types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LiveSessionsList } from "@/components/lms/live/live-sessions-list";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,19 +21,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const statusLabels = {
-  scheduled: "Agendada",
-  waiting: "Convocada",
-  live: "Ao vivo",
-  ended: "Encerrada",
-} as const;
-
-const recurrenceUnitLabels: Record<LiveSessionRecurrenceUnit, string> = {
-  day: "dia(s)",
-  week: "semana(s)",
-  month: "mês(es)",
-};
 
 function defaultScheduleFields() {
   const d = new Date();
@@ -67,8 +53,14 @@ export default function LiveSessionsCrmPage() {
   const [repeatOccurrences, setRepeatOccurrences] = useState("4");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
-  const sorted = [...liveSessions].sort(
-    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime(),
+  const tenantSessions = useMemo(
+    () => liveSessions.filter((session) => session.tenantId === tenant.id),
+    [liveSessions, tenant.id],
+  );
+
+  const tenantCourses = useMemo(
+    () => courses.filter((course) => course.tenantId === tenant.id),
+    [courses, tenant.id],
   );
 
   const courseStudents = useMemo(
@@ -163,9 +155,6 @@ export default function LiveSessionsCrmPage() {
             Agende, convoque alunos e gerencie sessões em tempo real.
           </p>
           <div className="flex gap-2 mt-3">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/ao-vivo/calendario">Calendário</Link>
-            </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href="/dashboard/ao-vivo/gravacoes">Gravações</Link>
             </Button>
@@ -397,67 +386,11 @@ export default function LiveSessionsCrmPage() {
         </Dialog>
       </div>
 
-      <div className="space-y-4">
-        {sorted.map((session) => {
-          const date = new Date(session.scheduledAt);
-          const isActive = session.status === "waiting" || session.status === "live";
-          const studentCount = session.participants.filter((p) => p.role === "student").length;
-
-          return (
-            <Card key={session.id} className={isActive ? "border-red-300 bg-red-50/40" : undefined}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge className={isActive ? "bg-red-600 text-white border-0" : undefined} variant="secondary">
-                        {statusLabels[session.status]}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">{session.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{session.courseTitle}</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm">{session.description}</p>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="size-4" />
-                    {date.toLocaleDateString("pt-BR")}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="size-4" />
-                    {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} ·{" "}
-                    {session.durationMinutes} min
-                  </span>
-                  {session.recurrence && (
-                    <span className="flex items-center gap-1">
-                      <Repeat className="size-4" />
-                      A cada {session.recurrence.interval} {recurrenceUnitLabels[session.recurrence.unit]}
-                    </span>
-                  )}
-                  <span className="flex items-center gap-1">
-                    <Users className="size-4" />
-                    {studentCount > 0 ? `${studentCount} aluno(s)` : `${session.participants.length} participantes`}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Link href={`/dashboard/ao-vivo/${session.id}`}>
-                    <Button variant="outline" size="sm">
-                      Gerenciar
-                    </Button>
-                  </Link>
-                  {session.status === "scheduled" && (
-                    <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => convokeSession(session.id)}>
-                      Convocar alunos
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <LiveSessionsList
+        sessions={tenantSessions}
+        courses={tenantCourses}
+        onConvoke={convokeSession}
+      />
     </div>
   );
 }

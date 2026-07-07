@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Circle, Pencil, PlayCircle } from "lucide-react";
+import { Circle, PlayCircle } from "lucide-react";
 import type { Course } from "@lms-mocks/types";
 import { countLessons } from "@lms-mocks/courses";
 import { lessonHasPractice } from "@lms-mocks/lesson-utils";
 import {
-  getCrmCoursePreviewHref,
-  getCrmLessonEditHref,
-  getCrmLessonHref,
   getCrmLessonPreviewPlayerHref,
   getCrmLessonPreviewPracticeHref,
 } from "@lms-mocks/course-routes";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Accordion,
@@ -22,60 +19,26 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 
-interface CourseStudentViewProps {
+type CrmCourseOverviewViewProps = {
   course: Course;
   courseId: string;
-  variant?: "standalone" | "embedded";
-  /** Visão do aluno em tela cheia — links de preview e sem banner de edição */
-  previewMode?: boolean;
-}
+};
 
-export function CourseStudentView({
-  course,
-  courseId,
-  variant = "standalone",
-  previewMode = false,
-}: CourseStudentViewProps) {
+export function CrmCourseOverviewView({ course, courseId }: CrmCourseOverviewViewProps) {
   const totalLessons = countLessons(course);
-  const firstModule = course.modules[0];
-  const firstLesson = firstModule?.lessons[0];
-  const embedded = variant === "embedded";
-  const studentLinks = previewMode || !embedded;
-
-  const lessonHref = (moduleSlug: string, lessonSlug: string) =>
-    studentLinks
-      ? getCrmLessonPreviewPlayerHref(courseId, moduleSlug, lessonSlug)
-      : getCrmLessonHref(courseId, moduleSlug, lessonSlug);
-
-  const practiceHref = (moduleSlug: string, lessonSlug: string) =>
-    studentLinks
-      ? getCrmLessonPreviewPracticeHref(courseId, moduleSlug, lessonSlug)
-      : getCrmLessonHref(courseId, moduleSlug, lessonSlug, "praticar");
-
+  const firstModule = [...course.modules].sort((a, b) => a.order - b.order)[0];
+  const firstLesson = firstModule
+    ? [...firstModule.lessons].sort((a, b) => a.order - b.order)[0]
+    : undefined;
   const startHref =
     firstModule && firstLesson
-      ? lessonHref(firstModule.slug, firstLesson.slug)
+      ? getCrmLessonPreviewPlayerHref(courseId, firstModule.slug, firstLesson.slug)
       : null;
 
   return (
-    <div className={embedded ? "px-4 py-6 space-y-6" : "mx-auto max-w-4xl px-4 py-8 space-y-8"}>
-      {embedded && !previewMode && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Visão do aluno
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Pré-visualização de como o curso aparece para os estudantes
-            </p>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={getCrmCoursePreviewHref(courseId)}>Abrir em tela cheia</Link>
-          </Button>
-        </div>
-      )}
-
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
       <div className="grid gap-8 md:grid-cols-[240px_1fr]">
         <div className="relative h-40 overflow-hidden rounded-xl bg-muted md:h-auto">
           <Image
@@ -100,14 +63,14 @@ export function CourseStudentView({
           </p>
           <div className="max-w-md space-y-1">
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{embedded ? "Progresso (exemplo aluno)" : "Progresso (exemplo aluno)"}</span>
+              <span>Progresso</span>
               <span>0%</span>
             </div>
             <Progress value={0} />
           </div>
           {startHref && (
-            <Link href={startHref}>
-              <Button>Iniciar primeira aula</Button>
+            <Link href={startHref} className={cn(buttonVariants())}>
+              Iniciar primeira aula
             </Link>
           )}
         </div>
@@ -128,12 +91,17 @@ export function CourseStudentView({
               </AccordionTrigger>
               <AccordionContent>
                 <ul className="space-y-1 pl-2">
-                  {mod.lessons.map((lesson, index) => (
-                    <li key={lesson.id} className="space-y-0.5">
-                      <div className="flex items-center gap-2 rounded-md px-1 py-1 hover:bg-accent/50">
+                  {mod.lessons.map((lesson, index) => {
+                    const hasPractice = lessonHasPractice(lesson);
+                    return (
+                      <li key={lesson.id} className="space-y-0.5">
                         <Link
-                          href={lessonHref(mod.slug, lesson.slug)}
-                          className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-2 text-sm"
+                          href={getCrmLessonPreviewPlayerHref(
+                            courseId,
+                            mod.slug,
+                            lesson.slug,
+                          )}
+                          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm hover:bg-accent"
                         >
                           {index === 0 ? (
                             <PlayCircle className="size-4 shrink-0 text-primary" />
@@ -150,25 +118,21 @@ export function CourseStudentView({
                             </Badge>
                           )}
                         </Link>
-                        {embedded && !previewMode && (
-                          <Button variant="outline" size="sm" className="h-8 shrink-0 text-xs" asChild>
-                            <Link href={getCrmLessonEditHref(courseId, mod.slug, lesson.slug)}>
-                              <Pencil className="mr-1 size-3" />
-                              Editar
-                            </Link>
-                          </Button>
+                        {hasPractice && (
+                          <Link
+                            href={getCrmLessonPreviewPracticeHref(
+                              courseId,
+                              mod.slug,
+                              lesson.slug,
+                            )}
+                            className="ml-10 text-xs text-primary hover:underline"
+                          >
+                            → Praticar exercícios
+                          </Link>
                         )}
-                      </div>
-                      {lessonHasPractice(lesson) && (
-                        <Link
-                          href={practiceHref(mod.slug, lesson.slug)}
-                          className="ml-10 text-xs text-primary hover:underline"
-                        >
-                          → Praticar exercícios
-                        </Link>
-                      )}
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               </AccordionContent>
             </AccordionItem>

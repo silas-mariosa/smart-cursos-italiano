@@ -363,6 +363,15 @@ export function countLessons(course: Course) {
   return course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
 }
 
+export function getFirstLessonInCourse(course: Course) {
+  const modules = [...course.modules].sort((a, b) => a.order - b.order);
+  for (const mod of modules) {
+    const lesson = [...mod.lessons].sort((a, b) => a.order - b.order)[0];
+    if (lesson) return { module: mod, lesson };
+  }
+  return null;
+}
+
 export function getLessonFromCourses(coursesList: Course[], courseId: string, lessonId: string) {
   return getLessonById(courseId, lessonId, coursesList);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Menu } from "lucide-react";
 import { getLessonBySlugs } from "@lms-mocks/course-slugs";
 import { getCrmLessonPreviewPlayerHref } from "@lms-mocks/course-routes";
@@ -22,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CoursePreviewPracticePage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params.id as string;
   const moduleSlug = params.moduleSlug as string;
   const lessonSlug = params.lessonSlug as string;
@@ -45,16 +44,10 @@ export default function CoursePreviewPracticePage() {
   const sidebar = <CoursePreviewSidebar course={course} courseId={courseId} currentLessonId={lessonId} />;
 
   return (
-    <div className="space-y-4">
-      <CoursePreviewToolbar
-        course={course}
-        activeTab="conteudo"
-        onTabChange={(tab) => {
-          if (tab === "alunos") router.push(`/dashboard/cursos/${courseId}/visualizar?tab=alunos`);
-        }}
-      />
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <CoursePreviewToolbar course={course} primaryAction="back" />
 
-      <div className="flex h-[calc(100vh-12rem)] border rounded-xl overflow-hidden bg-background">
+      <div className="flex min-h-0 flex-1 overflow-hidden border-t bg-background">
         <aside className="hidden lg:block w-72 shrink-0">{sidebar}</aside>
 
         <div className="flex-1 flex flex-col overflow-hidden">

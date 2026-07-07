@@ -1,20 +1,27 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { getCrmDefaultLessonHref } from "@lms-mocks/course-routes";
 import { useMockStore, getCourseFromStore } from "@/lib/mock-store";
-import { CourseStudentView } from "@/components/lms/course-preview/course-student-view";
 
 export default function CourseEditorPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.id as string;
   const { courses } = useMockStore();
   const course = getCourseFromStore(courses, courseId);
 
+  useEffect(() => {
+    if (!course) return;
+    router.replace(getCrmDefaultLessonHref(course));
+  }, [course, router]);
+
   if (!course) return null;
 
   return (
-    <div className="flex-1 overflow-y-auto bg-muted/10">
-      <CourseStudentView course={course} courseId={courseId} variant="embedded" />
+    <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+      Abrindo editor...
     </div>
   );
 }
